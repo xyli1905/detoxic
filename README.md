@@ -1,7 +1,7 @@
 # DeToxic
-This is a class project in CMPS240 at UCSC, aiming to detect toxic content in Quora qestions.
+This is a class project in CMPS240 at UCSC, aiming to detect toxic content in Quora qestions. This project is from an on-going [Kaggle competition](https://www.kaggle.com/c/quora-insincere-questions-classification), which provides us all the datasets and pretrained embeddings.
 
-Related topics: *NLP, classification, Deep Learning, PyTorch, Google Cloud Platform, GPU*
+Related topics: *NLP, classification, Deep Learning, content & style, PyTorch, Google Cloud Platform, GPU, Kaggle*
 
 ## Stage 1
 ### learning objectives
