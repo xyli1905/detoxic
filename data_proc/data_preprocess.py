@@ -7,8 +7,9 @@ import re
 import os
 import time
 
-class Preprocessor:
+class DataPreprocessor:
     def __init__(self):
+        self._name = "data_preprocessor"
         # -------------------- #
         # define in/output dir #
         # -------------------- #
@@ -231,7 +232,7 @@ class Preprocessor:
 
 def main():
     # initalize preprocessor
-    QuestionPreprocessor = Preprocessor()
+    QuestionPreprocessor = DataPreprocessor()
 
     # load data
     print("\nloading training data ...\n")
@@ -248,7 +249,7 @@ def main():
     # build vocabulary based on both training & test data
     print("\nbuilding vacabulary from traning+test data ...")
     vocab, _ = QuestionPreprocessor.build_vocabulary(train_token + test_token)
-    QuestionPreprocessor.dump_data(vocab, file_name="vocab_test.txt")
+    QuestionPreprocessor.dump_data(vocab, file_name="vocab.txt")
 
     # print seq length distribution (in number of words)
     train_seqlan_dist = QuestionPreprocessor.seqlen_dist(train_token)
