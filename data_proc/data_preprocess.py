@@ -33,23 +33,23 @@ class Preprocessor:
         # [x] split words connected by "/", substitute "/" with " or " (a preliminary preprocessing)
         #
         # for latex math expression
-        self.process_latex_expression = re.compile(r"(\[math)((\S|\s)+?)(math\])")
+        self._process_latex_expression = re.compile(r"(\[math)((\S|\s)+?)(math\])")
         # for quotation
-        self.process_quotation_single = re.compile(r"(\s+|\,\.\?|^)(\')((\s|\S)+?)(\')")
-        self.process_quotation_double1 = re.compile(r"(\s+|\,\.\?|^)(\'\')((\s|\S)+?)(\'\')")
-        self.process_quotation_double2 = re.compile(r"(\s+|\,\.\?|^)(\")((\s|\S)+?)(\")")
-        self.process_quotation_triple = re.compile(r"(\s+|\,\.\?|^)(\'\'\')((\s|\S)+?)(\'\'\')")
-        self.process_quotation_special = re.compile(r"(\s+|\,\.\?|^)(\')((\s|\S)+?)(\")")
+        self._process_quotation_single = re.compile(r"(\s+|\,\.\?|^)(\')((\s|\S)+?)(\')")
+        self._process_quotation_double1 = re.compile(r"(\s+|\,\.\?|^)(\'\')((\s|\S)+?)(\'\')")
+        self._process_quotation_double2 = re.compile(r"(\s+|\,\.\?|^)(\")((\s|\S)+?)(\")")
+        self._process_quotation_triple = re.compile(r"(\s+|\,\.\?|^)(\'\'\')((\s|\S)+?)(\'\'\')")
+        self._process_quotation_special = re.compile(r"(\s+|\,\.\?|^)(\')((\s|\S)+?)(\")")
         # for bracketed words
-        self.process_bracketed_words  = re.compile(r"(\s*|^)(\()((\s|\S)+?)(\))")
+        self._process_bracketed_words  = re.compile(r"(\s*|^)(\()((\s|\S)+?)(\))")
         # for web address
-        self.process_url_http = re.compile(r"(http|https)((\S|\s)+?)(\s+|$)")
-        self.process_url_www = re.compile(r"(www)((\S|\s)+?)(\s+|$)")
+        self._process_url_http = re.compile(r"(http|https)((\S|\s)+?)(\s+|$)")
+        self._process_url_www = re.compile(r"(www)((\S|\s)+?)(\s+|$)")
         # for parallel words, "/" --> "or"
-        self.process_double_parallel_words = re.compile(r"(\s+|^)([A-Za-z\-]+)(\/)([A-Za-z\-]+)(\s+|[\.\?\,\!]|$)")
-        self.process_triple_parallel_words = re.compile(r"(\s+|^)([A-Za-z\-]+)(\/)([A-Za-z\-]+)(\/)([A-Za-z\-]+)(\s+|[\.\?\,\!]|$)")
+        self._process_double_parallel_words = re.compile(r"(\s+|^)([A-Za-z\-]+)(\/)([A-Za-z\-]+)(\s+|[\.\?\,\!]|$)")
+        self._process_triple_parallel_words = re.compile(r"(\s+|^)([A-Za-z\-]+)(\/)([A-Za-z\-]+)(\/)([A-Za-z\-]+)(\s+|[\.\?\,\!]|$)")
         # for numbers 1231 & 2321.231 --> numbsymb
-        self.process_number = re.compile(r"(\s+|^)((\d+\.\d+)|(\d+))")
+        self._process_number = re.compile(r"(\s+|^)((\d+\.\d+)|(\d+))")
 
     def load_data(self, file_name="train.csv"):
         file_path = os.path.join(self.dataset_dir, file_name)
@@ -70,6 +70,7 @@ class Preprocessor:
         with open(output_file, 'w') as f:
             for item in data:
                 f.write("%s\n" % item)
+        print(" file %s dumped to %s" % (file_name, output_file))
 
     def tokenizer(self, data_seq):
         t_begin = time.time()
@@ -126,52 +127,52 @@ class Preprocessor:
         note we use repr(" "+content[2])[1:-1] to turn the string into raw string
         '''
         # replace latex expression with standard symbol
-        seq = self.process_latex_expression.sub("latexmathexpression", seq)
+        seq = self._process_latex_expression.sub("latexmathexpression", seq)
 
         # replace web address: http(s):... or www. with standard symbol
-        seq = self.process_url_http.sub("webaddress ", seq)
-        seq = self.process_url_www.sub("webaddress ", seq)
-        
-        # check for quotations and delete ''' ''', '' '', ' ' or " " symbols
-        match = self.process_quotation_triple.findall(seq)
-        for content in match:
-            seq = self.process_quotation_triple.sub(repr(" "+content[2])[1:-1], seq, 1)
-        
-        match = self.process_quotation_double1.findall(seq)
-        for content in match:
-            seq = self.process_quotation_double1.sub(repr(" "+content[2])[1:-1], seq, 1)
+        seq = self._process_url_http.sub("webaddress ", seq)
+        seq = self._process_url_www.sub("webaddress ", seq)
 
-        match = self.process_quotation_single.findall(seq)
+        # check for quotations and delete ''' ''', '' '', ' ' or " " symbols
+        match = self._process_quotation_triple.findall(seq)
         for content in match:
-            seq = self.process_quotation_single.sub(repr(" "+content[2])[1:-1], seq, 1)
-            
-        match = self.process_quotation_double2.findall(seq)
+            seq = self._process_quotation_triple.sub(repr(" "+content[2])[1:-1], seq, 1)
+
+        match = self._process_quotation_double1.findall(seq)
         for content in match:
-            seq = self.process_quotation_double2.sub(repr(" "+content[2])[1:-1], seq, 1)
-            
-        match = self.process_quotation_special.findall(seq)
+            seq = self._process_quotation_double1.sub(repr(" "+content[2])[1:-1], seq, 1)
+
+        match = self._process_quotation_single.findall(seq)
         for content in match:
-            seq = self.process_quotation_special.sub(repr(" "+content[2])[1:-1], seq, 1)
-            
+            seq = self._process_quotation_single.sub(repr(" "+content[2])[1:-1], seq, 1)
+
+        match = self._process_quotation_double2.findall(seq)
+        for content in match:
+            seq = self._process_quotation_double2.sub(repr(" "+content[2])[1:-1], seq, 1)
+
+        match = self._process_quotation_special.findall(seq)
+        for content in match:
+            seq = self._process_quotation_special.sub(repr(" "+content[2])[1:-1], seq, 1)
+
         # check for bracketed content and delete the brackets
-        match = self.process_bracketed_words.findall(seq)
+        match = self._process_bracketed_words.findall(seq)
         for content in match:
-            seq = self.process_bracketed_words.sub(repr(" "+content[2])[1:-1], seq, 1)
+            seq = self._process_bracketed_words.sub(repr(" "+content[2])[1:-1], seq, 1)
 
         # check parallel words, and replace "/" with " or "
-        match = self.process_triple_parallel_words.findall(seq)
+        match = self._process_triple_parallel_words.findall(seq)
         for content in match:
             contentstr = " " + content[1] + " or " + content[3] + " or " + content[5] + " " + content[-1]
-            seq = self.process_triple_parallel_words.sub(repr(contentstr)[1:-1], seq, 1)
-        
-        match = self.process_double_parallel_words.findall(seq)
+            seq = self._process_triple_parallel_words.sub(repr(contentstr)[1:-1], seq, 1)
+
+        match = self._process_double_parallel_words.findall(seq)
         for content in match:
             contentstr = " " + content[1] + " or " + content[3] + " " + content[-1]
-            seq = self.process_double_parallel_words.sub(repr(contentstr)[1:-1], seq, 1)
-            
+            seq = self._process_double_parallel_words.sub(repr(contentstr)[1:-1], seq, 1)
+
         # replace number e.g. 99 or 99.99 as "numbsymb"
-        seq = self.process_number.sub(" numbsymb", seq)
-        
+        seq = self._process_number.sub(" numbsymb", seq)
+
         return seq
 
     def _RE_preprocessing_except(self, seq):
@@ -179,52 +180,52 @@ class Preprocessor:
         note use this if repr(" "+content[2])[1:-1] raise an exception
         '''
         # replace latex expression with standard symbol
-        seq = self.process_latex_expression.sub("latexmathexpression", seq)
+        seq = self._process_latex_expression.sub("latexmathexpression", seq)
 
         # replace web address: http(s):... or www. with standard symbol
-        seq = self.process_url_http.sub("webaddress ", seq)
-        seq = self.process_url_www.sub("webaddress ", seq)
-        
-        # check for quotations and delete ''' ''', '' '', ' ' or " " symbols
-        match = self.process_quotation_triple.findall(seq)
-        for content in match:
-            seq = self.process_quotation_triple.sub(" "+content[2], seq, 1)
-        
-        match = self.process_quotation_double1.findall(seq)
-        for content in match:
-            seq = self.process_quotation_double1.sub(" "+content[2], seq, 1)
+        seq = self._process_url_http.sub("webaddress ", seq)
+        seq = self._process_url_www.sub("webaddress ", seq)
 
-        match = self.process_quotation_single.findall(seq)
+        # check for quotations and delete ''' ''', '' '', ' ' or " " symbols
+        match = self._process_quotation_triple.findall(seq)
         for content in match:
-            seq = self.process_quotation_single.sub(" "+content[2], seq, 1)
-            
-        match = self.process_quotation_double2.findall(seq)
+            seq = self._process_quotation_triple.sub(" "+content[2], seq, 1)
+
+        match = self._process_quotation_double1.findall(seq)
         for content in match:
-            seq = self.process_quotation_double2.sub(" "+content[2], seq, 1)
-            
-        match = self.process_quotation_special.findall(seq)
+            seq = self._process_quotation_double1.sub(" "+content[2], seq, 1)
+
+        match = self._process_quotation_single.findall(seq)
         for content in match:
-            seq = self.process_quotation_special.sub(" "+content[2], seq, 1)
-            
+            seq = self._process_quotation_single.sub(" "+content[2], seq, 1)
+
+        match = self._process_quotation_double2.findall(seq)
+        for content in match:
+            seq = self._process_quotation_double2.sub(" "+content[2], seq, 1)
+
+        match = self._process_quotation_special.findall(seq)
+        for content in match:
+            seq = self._process_quotation_special.sub(" "+content[2], seq, 1)
+
         # check for bracketed content and delete the brackets
-        match = self.process_bracketed_words.findall(seq)
+        match = self._process_bracketed_words.findall(seq)
         for content in match:
-            seq = self.process_bracketed_words.sub(" "+content[2], seq, 1)
-            
+            seq = self._process_bracketed_words.sub(" "+content[2], seq, 1)
+
         # check parallel words, and replace "/" with " or "
-        match = self.process_triple_parallel_words.findall(seq)
+        match = self._process_triple_parallel_words.findall(seq)
         for content in match:
             contentstr = " " + content[1] + " or " + content[3] + " or " + content[5] + " " + content[-1]
-            seq = self.process_triple_parallel_words.sub(contentstr, seq, 1)
-        
-        match = self.process_double_parallel_words.findall(seq)
+            seq = self._process_triple_parallel_words.sub(contentstr, seq, 1)
+
+        match = self._process_double_parallel_words.findall(seq)
         for content in match:
             contentstr = " " + content[1] + " or " + content[3] + " " + content[-1]
-            seq = self.process_double_parallel_words.sub(contentstr, seq, 1)
-            
+            seq = self._process_double_parallel_words.sub(contentstr, seq, 1)
+
         # replace number e.g. 99 or 99.99 as "numbsymb"
-        seq = self.process_number.sub("numbsymb", seq)
-        
+        seq = self._process_number.sub("numbsymb", seq)
+
         return seq
 
 
