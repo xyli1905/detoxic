@@ -5,16 +5,30 @@ import collections
 import nltk
 import re
 import os
+import pickle
 import time
 
-class DataPreprocessor:
-    def __init__(self):
-        self._name = "data_preprocessor"
+np.random.seed()
+
+'''methods list:
+
+    load_data_csv(file_name)
+    load_data_pkl(file_name)
+    dump_data_pkl(data, file_name)
+    tokenizer(seqlist)          --seqlist：training/test data--
+    build_vocabulary(token, freq_cutoff=1)
+    seq_len_dist(token)
+    build_data_mat(vocab, *arg) --arg: token, label or token--
+'''
+class QuestionPreprocessor:
+    def __init__(self, sentence_cutoff=60):
+        self._name = "question_preprocessor"
+        self.sentence_cutoff = sentence_cutoff
         # -------------------- #
         # define in/output dir #
         # -------------------- #
         self.dataset_dir = "/Users/xyli1905/Projects/Datasets/Kaggle/QuoraToxicDetect/"
-        self.output_dir = "/Users/xyli1905/Projects/NLP/detoxic/data_proc/"
+        self.output_dir = "/Users/xyli1905/Projects/NLP/detoxic/data_proc/processed_data"
         # ---------------------------------------------------- #
         # define regular expression for question preprocessing #
         # ---------------------------------------------------- #
@@ -52,10 +66,14 @@ class DataPreprocessor:
         # for numbers 1231 & 2321.231 --> numbsymb
         self._process_number = re.compile(r"(\s+|^)((\d+\.\d+)|(\d+))")
 
-    def load_data(self, file_name="train.csv"):
+    def load_data_csv(self, file_name="train.csv"):
+        '''
+        this method is for loading training & test datasets
+        '''
         file_path = os.path.join(self.dataset_dir, file_name)
         data = pd.read_csv(file_path)
 
+        data_seq = list(data["question_text"])
         # if training data, then summary on data label
         if file_name == "train.csv":
             data_label = np.array(data["target"])
@@ -63,15 +81,28 @@ class DataPreprocessor:
             print(" In training data:\n num of Label 0: %s \n num of Label 1: %s \n Toxic percentage: %s %s" \
                   % (dist_dic[0], dist_dic[1], dist_dic[1]/(dist_dic[0] + dist_dic[1])*100., "%"))
 
-        data_seq = list(data["question_text"])
-        return data_seq
+            return data_seq, data_label
 
-    def dump_data(self, data, file_name):
+        return data_seq, np.array([],dtype=np.int64)
+
+    def load_data_pkl(self, file_name):
+        '''
+        this method is for loading pre-saved files,
+        so we load them from the self.output_dir directory
+        those files are: train_token.pkl, train_label.pkl, 
+                         test_token.pkl, vocab.pkl
+                         train_mat.pkl, test_mat.pkl
+        '''
+        input_path = os.path.join(self.output_dir, file_name)
+        with open(input_path, 'rb') as f:
+            data = pickle.load(f)
+        return data
+
+    def dump_data_pkl(self, data, file_name):
         output_file = os.path.join(self.output_dir, file_name)
-        with open(output_file, 'w') as f:
-            for item in data:
-                f.write("%s\n" % item)
-        print(" file %s dumped to %s" % (file_name, output_file))
+        with open(output_file, 'wb') as f:
+            pickle.dump(data, f)
+        print(" file %s saved to %s" % (file_name, output_file))
 
     def tokenizer(self, data_seq):
         t_begin = time.time()
@@ -92,22 +123,69 @@ class DataPreprocessor:
         print(" Time for tokenizing all questions is %s (s)" % (t_end - t_begin))
         return data_token
 
-    def build_vocabulary(self, data_token):
+    def build_vocabulary(self, data_token, freq_cutoff=1):
         words = []
         for question in data_token:
             for word in question:
                 words.append(word)
+
+        if freq_cutoff > 1:
+            fdist = nltk.FreqDist(words)
+            words = [word for word, freq in fdist.items() if freq >= freq_cutoff]
+
         vocab = sorted(set(words))
+
         print(" built vocabulary with %s words" % (len(vocab)))
         return vocab, words
 
-    def seqlen_dist(self, token):
+    def seq_len_dist(self, token):
         seq_num = len(token)
         maxlen, _ = self._max_seq_len(token)
         len_dist = np.zeros(maxlen, dtype = np.int)
         for i in range(seq_num):
             len_dist[len(token[i])-1] += 1
         return len_dist
+
+    def build_data_mat(self, vocab, *arg):
+        '''
+        arg: either train_token + train_label 
+             or test_token alone
+        '''
+        assert len(arg) >= 1, "not enough input arguments"
+        assert len(arg) <= 2, "too many input arguments"
+
+        if isinstance(arg[0], list):
+            token_list = arg[0]
+        else:
+            raise ValueError('second input should be token (list)')
+
+        if len(arg) == 2:
+            if isinstance(arg[1], np.ndarray):
+                label = arg[1]
+            else:
+                raise ValueError('third input should be label (np.ndarray)')
+
+        vocab_len = len(vocab)
+        idx_unknown = vocab_len
+        idx_nothing = vocab_len + 1
+
+        word_to_idx = {word: i for i, word in enumerate(vocab)}
+
+        data_mat = np.full((len(token_list), self.sentence_cutoff), idx_nothing)
+        for i, sentence in enumerate(token_list):
+            for j, word in enumerate(sentence):
+                if j >= self.sentence_cutoff:
+                    break
+                try:
+                    data_mat[i,j] = word_to_idx[word]
+                except:
+                    data_mat[i,j] = idx_unknown
+
+        if len(arg) == 1:
+            return data_mat
+        elif len(arg) == 2:
+            data_mat = np.concatenate([data_mat, label.reshape(-1,1)], axis=1)
+            return data_mat
 
     def _max_seq_len(self, token):
         '''
@@ -230,31 +308,42 @@ class DataPreprocessor:
         return seq
 
 
+# demo of using QuestionPreprocessor class
 def main():
-    # initalize preprocessor
-    QuestionPreprocessor = DataPreprocessor()
+    # initalize question preprocessor
+    Qproc = QuestionPreprocessor()
 
     # load data
     print("\nloading training data ...\n")
-    train_data = QuestionPreprocessor.load_data(file_name="train.csv")
+    train_data, train_label = Qproc.load_data_csv(file_name="train.csv")
     print("\nloading test data ...")
-    test_data  = QuestionPreprocessor.load_data(file_name="test.csv")
+    test_data, _  = Qproc.load_data_csv(file_name="test.csv")
 
     # tokenize questions
     print("\ntokenizing trianing dataset ...")
-    train_token = QuestionPreprocessor.tokenizer(train_data)
+    train_token = Qproc.tokenizer(train_data)
     print("\ntokenizing test dataset ...")
-    test_token  = QuestionPreprocessor.tokenizer(test_data)
+    test_token  = Qproc.tokenizer(test_data)
+    Qproc.dump_data_pkl(train_token, file_name="train_token.pkl")
+    Qproc.dump_data_pkl(test_token, file_name="test_token.pkl")
 
     # build vocabulary based on both training & test data
     print("\nbuilding vacabulary from traning+test data ...")
-    vocab, _ = QuestionPreprocessor.build_vocabulary(train_token + test_token)
-    QuestionPreprocessor.dump_data(vocab, file_name="vocab.txt")
+    vocab, _ = Qproc.build_vocabulary(train_token + test_token)
+    Qproc.dump_data_pkl(vocab, file_name="vocab.pkl")
 
     # print seq length distribution (in number of words)
-    train_seqlan_dist = QuestionPreprocessor.seqlen_dist(train_token)
+    train_seq_len_dist = Qproc.seq_len_dist(train_token)
     print("\nsequence length distribution for training data (in #words):")
-    print(train_seqlan_dist)
+    print(train_seq_len_dist)
+
+    # build train_mat (using train_token & train_label) and test_mat
+    print("\nbuilding train_mat from train_token+train_label ...")
+    train_mat = Qproc.build_data_mat(vocab, train_token, train_label)
+    print("\nbuilding test_mat from test_token ...")
+    test_mat = Qproc.build_data_mat(vocab, test_token)
+    Qproc.dump_data_pkl(train_mat, file_name="train_mat.pkl")
+    Qproc.dump_data_pkl(test_mat, file_name="test_mat.pkl")
 
 
 if __name__ == '__main__':
