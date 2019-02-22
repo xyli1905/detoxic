@@ -1,0 +1,13 @@
+------------ Options -------------
+batch_size: 64
+chkp_dir: /Users/xyli1905/Projects/NLP/detoxic/checkpoints
+data_dir: /Users/xyli1905/Projects/NLP/detoxic/data_proc/processed_data
+load_epoch_idx: 0
+lr: 0.01
+max_epoch: 10
+model_type: baseline
+pretrained_weight_name: pretrained_weight.pkl
+save_freq: 1
+trainable_emb: False
+vocab_name: vocab.pkl
+-------------- End ----------------

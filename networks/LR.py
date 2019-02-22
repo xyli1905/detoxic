@@ -14,14 +14,12 @@ import os
     this is the Bag of Word LR model
 '''
 class BoW(BaseNetwork):
-    def __init__(self, trainable_emb=False):
-        super(BoW, self).__init__()
+    def __init__(self, opt):
+        super(BoW, self).__init__(opt)
         self.name = "BoW"
         self.trained = False
         self.training_times = 0
-        self._chkp_dir = "/Users/xyli1905/Projects/NLP/detoxic/checkpoints"
-        self._data_dir = "/Users/xyli1905/Projects/NLP/detoxic/data_proc/processed_data"
-        self._vocab_name = "vocab.pkl"
+        self._opt = opt
         
         # define parameters
         self._load_vocab()
@@ -32,7 +30,7 @@ class BoW(BaseNetwork):
         self.b = nn.Parameter(torch.zeros(self.output_size))
 
     def _load_vocab(self):
-        vocab_path = os.path.join(self._data_dir, self._vocab_name)
+        vocab_path = os.path.join(self._opt.data_dir, self._opt.vocab_name)
         with open(vocab_path, 'rb') as f:
             # vocab.pkl is np.ndarray
             self.vocab = pickle.load(f)
@@ -64,18 +62,15 @@ class BoW(BaseNetwork):
 
 '''
 class EmbBoW(BaseNetwork):
-    def __init__(self, trainable_emb=False):
-        super(EmbBoW, self).__init__()
+    def __init__(self, opt):
+        super(EmbBoW, self).__init__(opt)
         self.name = "EmbBoW"
         self.trained = False
         self.training_times = 0
-        self._chkp_dir = "/Users/xyli1905/Projects/NLP/detoxic/checkpoints"
-        self._data_dir = "/Users/xyli1905/Projects/NLP/detoxic/data_proc/processed_data"
-        self._pretrained_weight_name = "pretrained_weight.pkl"
+        self._opt = opt
         
         # define parameters
         self._setup_emb()
-        self.trainable_emb = trainable_emb
         self.hidden_size = 64
         self.output_size = 2 # two labels 0,1
         ##self-defined model parameter
@@ -90,7 +85,7 @@ class EmbBoW(BaseNetwork):
         self.init_weight()
 
     def _setup_emb(self):
-        emb_path = os.path.join(self._data_dir, self._pretrained_weight_name)
+        emb_path = os.path.join(self._opt.data_dir, self._opt.pretrained_weight_name)
         with open(emb_path, 'rb') as f:
             # pretrained_weight.pkl is np.ndarray
             self.pretrained_weight = torch.from_numpy(pickle.load(f))
@@ -100,7 +95,7 @@ class EmbBoW(BaseNetwork):
         
     def init_weight(self):
         self.embed.weight.data.copy_(self.pretrained_weight)
-        self.embed.weight.requires_grad = self.trainable_emb
+        self.embed.weight.requires_grad = self._opt.trainable_emb
         # with other layers defaultly initialized
     
     def weighted_embed(self, x, seq):
@@ -133,18 +128,15 @@ class EmbBoW(BaseNetwork):
     namely use embeddings to identify words & assign them weights
 '''
 class EmbLR(BaseNetwork):
-    def __init__(self, trainable_emb=False):
-        super(EmbLR, self).__init__()
+    def __init__(self, opt):
+        super(EmbLR, self).__init__(opt)
         self.name = "EmbLR"
         self.trained = False
         self.training_times = 0
-        self._chkp_dir = "/Users/xyli1905/Projects/NLP/detoxic/checkpoints"
-        self._data_dir = "/Users/xyli1905/Projects/NLP/detoxic/data_proc/processed_data"
-        self._pretrained_weight_name = "pretrained_weight.pkl"
+        self._opt = opt
         
         # define parameters
         self._setup_emb()
-        self.trainable_emb = trainable_emb
         self.hidden_size = 64
         self.output_size = 2 # two labels 0,1
         ##self-defined model parameter
@@ -159,7 +151,7 @@ class EmbLR(BaseNetwork):
         self.init_weight()
 
     def _setup_emb(self):
-        emb_path = os.path.join(self._data_dir, self._pretrained_weight_name)
+        emb_path = os.path.join(self._opt.data_dir, self._opt.pretrained_weight_name)
         with open(emb_path, 'rb') as f:
             # pretrained_weight.pkl is np.ndarray
             self.pretrained_weight = torch.from_numpy(pickle.load(f))
@@ -169,7 +161,7 @@ class EmbLR(BaseNetwork):
         
     def init_weight(self):
         self.embed.weight.data.copy_(self.pretrained_weight)
-        self.embed.weight.requires_grad = self.trainable_emb
+        self.embed.weight.requires_grad = self._opt.trainable_emb
         # with other layers defaultly initialized
 
     def emb_selfcorr(self, x):

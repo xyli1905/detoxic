@@ -4,11 +4,13 @@ import pickle
 import os
 
 class BaseNetwork(torch.nn.Module):
-    def __init__(self):
+    def __init__(self, opt):
         super(BaseNetwork, self).__init__()
         self.name = "BaseNetwork"
-        self._chkp_dir = "/Users/xyli1905/Projects/NLP/detoxic/checkpoints"
+        self._opt = opt
         self._save_times = 0
+        ##directory for saving/loading networks
+        self._NET_dir = os.path.join(self._opt.chkp_dir, self._opt.model_type)
 
     def forward(self, input):
         assert False, "set_input not implemented"
@@ -25,7 +27,7 @@ class BaseNetwork(torch.nn.Module):
         '''
         fname = 'net_{}_{}_id.pth'.format(self.name, str(epoch_idx))
         self._save_times += 1
-        save_path = os.path.join(self._chkp_dir, fname)
+        save_path = os.path.join(self._NET_dir, fname)
         torch.save(self.state_dict(), save_path)
         print("Model %s saved at %s" % (self.name, save_path))
         
@@ -48,13 +50,13 @@ class BaseNetwork(torch.nn.Module):
 
         if idx == -1:
             idx_num = -1
-            for file in os.listdir(self._chkp_dir):
+            for file in os.listdir(self._NET_dir):
                 if file.startswith(net_mark):
                     idx_num = max(idx_num, int(file.split('_')[2]))
             assert idx_num >= 0, 'Model %s file not found' % self.name
         else:
             found = False
-            for file in os.listdir(self._chkp_dir):
+            for file in os.listdir(self._NET_dir):
                 if file.startswith(net_mark):
                     found = int(file.split('_')[2]) == idx
                     if found: break
@@ -62,7 +64,7 @@ class BaseNetwork(torch.nn.Module):
             idx_num = idx
 
         fname = 'net_{}_{}_id.pth'.format(self.name, str(idx_num))
-        file_path = os.path.join(self._chkp_dir, fname)
+        file_path = os.path.join(self._NET_dir, fname)
 
         return file_path
 #
