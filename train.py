@@ -1,6 +1,7 @@
 # for model training
 from networks.LR import BoW, EmbBoW, EmbLR
 from options.base_options import BaseOption
+from utils import util
 import torch
 from torch.utils.data import DataLoader
 import pickle
@@ -38,14 +39,11 @@ class Train:
 
         # train model
         self._train()
-        
-        # update training flag
-        if self._model.trained:
-            self._model.training_times += 1
-        else:
+
+        # update training status
+        if not self._model.trained:
             self._model.trained = True
-            self._model.training_times = 1
-    
+
     def _train(self):
         # may initialize info of training here
         # e.g. self._total_step
@@ -57,22 +55,22 @@ class Train:
 
         for i_epoch in range(self._start_epoch, self._opt.max_epoch):
             epoch_time_start = time.time()
-            
+
             # train epoch
             print("Start epoch %d / %d, \t at %s" % \
                   (i_epoch+1, self._opt.max_epoch, time.asctime()))
             self._train_epoch(i_epoch)
-        
+
             # save model after each epoch here, note i_epoch is 0-based
             if (i_epoch+1) % self._opt.save_freq == 0 or (i_epoch+1) == self._opt.max_epoch:
                 self._model.save(i_epoch+1)
                 self._save_opt(i_epoch+1)
-            
+
             # training time for each epoch
             time_cost = time.time() - epoch_time_start
-            print("End of epoch %d / %d \t Time taken: %d sec (or % d min)" % \
+            print("End of epoch %d / %d \t Time taken: %d sec (or % d min)\n" % \
                   (i_epoch+1, self._opt.max_epoch, time_cost, time_cost / 60.))
-            
+
             # may updata learning rate here
             # if i_epoch > ...
 
@@ -108,48 +106,23 @@ class Train:
         fname = 'opt_{}_{}_id.pth'.format(self._model.name, str(idx))
         save_path = os.path.join(self._OPT_dir, fname)
         torch.save(self._optimizer.state_dict(), save_path)
-        print("optimizer for %s saved at %s" % (self._model.name, save_path))
-
-    def _find_opt_file(self, idx):
-        '''
-        return the opt file for self._model.name & given idx
-        if idx=-1 load the one with max idx
-        '''
-        opt_mark = 'opt_{}'.format(self._model.name)
-
-        if idx == -1:
-            idx_num = -1
-            for file in os.listdir(self._OPT_dir):
-                if file.startswith(opt_mark):
-                    idx_num = max(idx_num, int(file.split('_')[2]))
-            assert idx_num >= 0, 'opt file not found'
-        else:
-            found = False
-            for file in os.listdir(self._OPT_dir):
-                if file.startswith(opt_mark):
-                    found = int(file.split('_')[2]) == idx
-                    if found: break
-            assert found, 'opt file for epoch %i not found' % idx
-            idx_num = idx
-
-        # self._start_epoch is 0-based, idx_num is 1-based
-        # will do self._start_epoch later
-        self._start_epoch = idx_num
-
-        fname = 'opt_{}_{}_id.pth'.format(self._model.name, str(idx_num))
-        file_path = os.path.join(self._OPT_dir, fname)
-
-        return file_path
+        print(" optimizer for %s saved at %s" % (self._model.name, save_path))
 
     def _load_opt(self, idx):
         '''
         load optimizer
         if idx=-1 load the one with max idx
         '''
-        file_path = self._find_opt_file(idx)
+        # file_path = self._find_opt_file(idx)
+        opt_mark = 'opt_{}'.format(self._model.name)
+        file_path, idx_num = util.find_file(opt_mark, self._OPT_dir, idx)
+
+        # self._start_epoch is 0-based, idx_num is 1-based
+        # will do self._start_epoch later
+        self._start_epoch = idx_num
         
         self._optimizer.load_state_dict(torch.load(file_path))
-        print("optimizer for %s loaded from %s" % (self._model.name, file_path))
+        print(" optimizer for %s loaded from %s" % (self._model.name, file_path))
 
     def _load_epoch(self, idx=-1):
         '''

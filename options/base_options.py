@@ -8,6 +8,7 @@ class BaseOption:
         self._initialized = False
 
     def initialize(self):
+        # directory options
         self._parser.add_argument('--chkp_dir', type=str,
                                   default='/Users/xyli1905/Projects/NLP/detoxic/checkpoints',
                                   help='directory storing trained models and optimizers')
@@ -18,16 +19,21 @@ class BaseOption:
                                   default='baseline',
                                   help='type of model: baseline, rnn, encoder-decoder')
 
+        # data options
         self._parser.add_argument('--vocab_name', type=str, default='vocab.pkl', help='file name for processed vocabulary')
         self._parser.add_argument('--pretrained_weight_name', type=str, default='pretrained_weight.pkl',
                                   help='file name for processed pretrained weight')
         self._parser.add_argument('--trainable_emb', type=bool, default=False, help='whether allow update pretrained embedding')
 
-        self._parser.add_argument('--max_epoch', type=int, default=10, help='number of epochs for training')
+        # general options for models
+        self._parser.add_argument('--max_epoch', type=int, default=1, help='number of epochs for training')
         self._parser.add_argument('--batch_size', type=int, default=64, help='number of data points in one batch')
         self._parser.add_argument('--save_freq', type=int, default=1, help='frequency (/epoch) for saving model')
         self._parser.add_argument('--load_epoch_idx', type=int, default=0, help='idx of epoch for loading')
-        self._parser.add_argument('--lr', type=int, default=0.01, help='learning rate')
+        self._parser.add_argument('--lr', type=float, default=0.01, help='learning rate')
+
+        # options for RNN models
+
 
         self._initialized = True
 

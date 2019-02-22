@@ -1,3 +1,4 @@
+from utils import util
 import torch
 import torch.nn.functional as F
 import pickle
@@ -9,6 +10,7 @@ class BaseNetwork(torch.nn.Module):
         self.name = "BaseNetwork"
         self._opt = opt
         self._save_times = 0
+        self.trained = False
         ##directory for saving/loading networks
         self._NET_dir = os.path.join(self._opt.chkp_dir, self._opt.model_type)
 
@@ -29,42 +31,17 @@ class BaseNetwork(torch.nn.Module):
         self._save_times += 1
         save_path = os.path.join(self._NET_dir, fname)
         torch.save(self.state_dict(), save_path)
-        print("Model %s saved at %s" % (self.name, save_path))
+        print(" model %s saved at %s" % (self.name, save_path))
         
     def load(self, idx=-1):
         '''
         load trained model with idx,
         if idx=-1 load the one with max idx
         '''
-        file_path = self._find_net_file(idx)
+        net_mark = 'net_{}'.format(self.name)
+        file_path, _ = util.find_file(net_mark, self._NET_dir, idx)
 
         self.load_state_dict(torch.load(file_path))
-        print("Model %s loaded from %s" % (self.name, file_path))
+        print(" model %s loaded from %s" % (self.name, file_path))
 
-    def _find_net_file(self, idx):
-        '''
-        return the model file for self._model.name & given idx
-        if idx=-1 load the one with max idx
-        '''
-        net_mark = 'net_{}'.format(self.name)
-
-        if idx == -1:
-            idx_num = -1
-            for file in os.listdir(self._NET_dir):
-                if file.startswith(net_mark):
-                    idx_num = max(idx_num, int(file.split('_')[2]))
-            assert idx_num >= 0, 'Model %s file not found' % self.name
-        else:
-            found = False
-            for file in os.listdir(self._NET_dir):
-                if file.startswith(net_mark):
-                    found = int(file.split('_')[2]) == idx
-                    if found: break
-            assert found, 'Model %s file for epoch %i not found' % (self.name, idx)
-            idx_num = idx
-
-        fname = 'net_{}_{}_id.pth'.format(self.name, str(idx_num))
-        file_path = os.path.join(self._NET_dir, fname)
-
-        return file_path
 #
