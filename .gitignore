@@ -114,3 +114,5 @@ data_proc/processed_data/
 /data_proc/data_analyze_raw.ipynb
 
 .idea/
+
+/backup/

@@ -113,7 +113,6 @@ class Train:
         load optimizer
         if idx=-1 load the one with max idx
         '''
-        # file_path = self._find_opt_file(idx)
         opt_mark = 'opt_{}'.format(self._model.name)
         file_path, idx_num = util.find_file(opt_mark, self._OPT_dir, idx)
 

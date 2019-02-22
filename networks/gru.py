@@ -1,10 +1,9 @@
 # Gated Recurrent Unit (GRU); Baseline model
 from .basenetwork import BaseNetwork
-from torch.autograd import Variable
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+from torch.autograd import Variable
 import pickle
 import os
 
