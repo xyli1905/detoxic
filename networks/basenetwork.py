@@ -1,6 +1,7 @@
 from utils import util
 import torch
 import torch.nn.functional as F
+from torch.utils.data import DataLoader
 import pickle
 import os
 
@@ -22,6 +23,45 @@ class BaseNetwork(torch.nn.Module):
         y = F.softmax(self.forward(idx_seq), dim=1)
         y_pred = torch.argmax(y, dim=1)
         return y_pred
+
+    def evaluate(self, test_data):
+        '''
+        assuming test_data's last col is label
+        '''
+        total_num = test_data.shape[0]
+        eval_data = DataLoader(test_data, 
+                               batch_size=1000,
+                               shuffle=False,
+                               drop_last=False)
+        A = 0.
+        B = 0.
+        C = 0.
+        for i_batch, eval_batch in enumerate(eval_data):
+
+            batch_pred = self.predict(eval_batch[:,:-1])
+            batch_diff = batch_pred - torch.squeeze(eval_batch[:,-1])
+
+            A += torch.sum(batch_pred)
+            B += torch.sum(eval_batch[:,-1])
+            C += torch.sum(torch.abs(batch_diff))
+
+        fA = float(A)
+        fB = float(B)
+        fC = float(C)
+        TP = (fA+fB-fC)/2.
+
+        f1score   = 2.*TP/(fA+fB)
+        recall    = TP/fB
+        precision = TP/fA
+        accuracy  = (1. - fC/float(total_num))*100.
+
+        print("Predicted Positive: %d" % (fA))
+        print("   Actual Positive: %d" % (fB))
+        print(" Incorrect Predict: %d" % (fC))
+        print("\n F1 Score: %.5f" % (f1score))
+        print("   Recall: %.5f" % (recall))
+        print("Precision: %.5f" % (precision))
+        print(" Accuracy: %.5f%s" % (accuracy, "%"))
 
     def save(self, epoch_idx):
         '''

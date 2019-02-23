@@ -26,14 +26,11 @@ class BaseOption:
         self._parser.add_argument('--trainable_emb', type=bool, default=False, help='whether allow update pretrained embedding')
 
         # general options for models
-        self._parser.add_argument('--max_epoch', type=int, default=1, help='number of epochs for training')
+        self._parser.add_argument('--max_epoch', type=int, default=10, help='number of epochs for training')
         self._parser.add_argument('--batch_size', type=int, default=64, help='number of data points in one batch')
         self._parser.add_argument('--save_freq', type=int, default=1, help='frequency (/epoch) for saving model')
         self._parser.add_argument('--load_epoch_idx', type=int, default=0, help='idx of epoch for loading')
         self._parser.add_argument('--lr', type=float, default=0.01, help='learning rate')
-
-        # options for RNN models
-
 
         self._initialized = True
 

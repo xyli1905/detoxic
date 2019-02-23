@@ -2,12 +2,11 @@
 import os
 
 
-
+# make directory if not already existed
 def mkdir(target_dir):
     #prepare saving directory
     if not os.path.exists(target_dir):
         os.makedirs(target_dir)
-
 
 # function used to find the path of pretrained models & optimizers
 def find_file(file_mark, file_dir, epoch_idx):
@@ -19,6 +18,10 @@ def find_file(file_mark, file_dir, epoch_idx):
     return the opt/net file for self._model.name & given idx
     if idx=-1 load the one with max idx
     '''
+    # test the validity of input file_mark
+    if not ('opt' in file_mark or 'net' in file_mark):
+        raise ValueError('util.find_file only applies to net_ or opt_ file')
+
     if epoch_idx == -1:
         idx_num = -1
         for file in os.listdir(file_dir):

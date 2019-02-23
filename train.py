@@ -8,15 +8,24 @@ import pickle
 import time
 import os
 
+'''
+NOTE the last two parameters are added for easy use in jupyter notebook
+will be removed in later versions
+'''
 class Train:
-    def __init__(self, model, train_data):
+    def __init__(self, model, train_data, max_epoch=-1, load_epoch_idx=0):
         # parse param & options & setup
         self._opt = BaseOption().parse()
         self._start_epoch = 0
         self._training_size = train_data.shape[0]
         ##directory for saving/loading optimizer
         self._OPT_dir = os.path.join(self._opt.chkp_dir, self._opt.model_type)
-        
+        ##add for easy use in jupyter notebook
+        if max_epoch != -1:
+            self._opt.max_epoch = max_epoch
+        if load_epoch_idx != 0:
+            self._opt.load_epoch_idx = load_epoch_idx
+
         # NOTE: loading method will be changed in the future
         #load training dataset
         #self._training_dataset = 
@@ -57,7 +66,7 @@ class Train:
             epoch_time_start = time.time()
 
             # train epoch
-            print("Start epoch %d / %d, \t at %s" % \
+            print("\nStart epoch %d / %d, \t at %s" % \
                   (i_epoch+1, self._opt.max_epoch, time.asctime()))
             self._train_epoch(i_epoch)
 
@@ -68,7 +77,7 @@ class Train:
 
             # training time for each epoch
             time_cost = time.time() - epoch_time_start
-            print("End of epoch %d / %d \t Time taken: %d sec (or % d min)\n" % \
+            print("End of epoch %d / %d \t Time taken: %d sec (or % d min)" % \
                   (i_epoch+1, self._opt.max_epoch, time_cost, time_cost / 60.))
 
             # may updata learning rate here
@@ -96,7 +105,7 @@ class Train:
                 p += 0.1
 
         # end of display progress
-        print(" end")
+        print(" done")
 
     def _save_opt(self, idx):
         '''
@@ -136,7 +145,7 @@ class Train:
 def main():
     with open('./data_proc/processed_data/train_mat.pkl', 'rb') as f:
         train_data = pickle.load(f)
-    Train(EmbLR, train_data)
+    Train(EmbLR, train_data[:-50000,:])
 
 
 if __name__ == '__main__':
