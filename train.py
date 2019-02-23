@@ -37,7 +37,7 @@ class Train:
 
         # setup model & training
         self._model = model
-        # self._model = model(self._opt)
+        ##self._model = model(self._opt)
         self._lossfun = torch.nn.CrossEntropyLoss()
         self._optimizer = torch.optim.SGD(self._model.parameters(), lr=self._opt.lr)
 
