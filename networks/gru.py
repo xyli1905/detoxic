@@ -67,14 +67,17 @@ class GRUmodel(BaseNetwork):
         self.embed.weight.requires_grad = self._opt.trainable_emb
         # with other layers defaultly initialized
         
-    def forward(self, idx_seq):
+    def forward(self, idx_seq, use_encoding=False):
         X = self.embed(idx_seq) # X:(b, seqlen, embdim)
         h = Variable(torch.zeros(self._h_state_vsize, idx_seq.shape[0], self._cell_hidden_size))
         X, h = self.gru(X, h)
         X = self.dropout(X)
-        X = F.relu(self.linear1(X[:,-1,:]))
-        out = self.linear2(X).view(-1,self._output_size)
+        encoding = F.relu(self.linear1(X[:,-1,:]))
+        if use_encoding:
+            return encoding
+        out = self.linear2(encoding).view(-1,self._output_size)
         return out
+
 #
 
 

@@ -116,3 +116,5 @@ data_proc/processed_data/
 .idea/
 
 /backup/
+
+.vscode/

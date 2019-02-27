@@ -106,15 +106,17 @@ class EmbBoW(BaseNetwork):
             output[i] = torch.mm(self.W[idxseq], x[i])
         return output
             
-    def forward(self, idx_seq):
+    def forward(self, idx_seq, use_encoding=False):
         '''
         note idx_seq must be a torch tensor of dtype torch.long
         N is batch size, 60 is the limit of sentence len
         '''
         X = self.embed(idx_seq) # idx_seq:(N, 60), X:(N, 60, 300)
         X = self.weighted_embed(X, idx_seq)
-        X = F.relu(self.linear1(X))
-        out = self.linear2(X).view(-1,self._output_size)
+        encoding = F.relu(self.linear1(X))
+        if use_encoding:
+            return encoding
+        out = self.linear2(encoding).view(-1,self._output_size)
         return out
     
 
@@ -167,7 +169,7 @@ class EmbLR(BaseNetwork):
             output[i] = torch.mm(torch.t(x[i]), x[i])
         return output
         
-    def forward(self, idx_seq):
+    def forward(self, idx_seq, use_encoding=False):
         '''
         note idx_seq must be a torch tensor of dtype torch.long
         N is batch size, 60: sentence_cutoff, 300: embedding_dim
@@ -176,9 +178,11 @@ class EmbLR(BaseNetwork):
         X = self.embed(idx_seq)  # emb vec X:(N, 60, 300)
         X = self.emb_selfcorr(X) # give corr mat: (N, 300, 300)
         X = torch.squeeze(torch.matmul(X, self.W))   # weighted sum of embeddings (N, 300)
-        X = F.relu(self.linear1(X))
-        out = self.linear2(X).view(-1,self._output_size)
-        return out   
+        encoding = F.relu(self.linear1(X))
+        if use_encoding:
+            return encoding
+        out = self.linear2(encoding).view(-1,self._output_size)
+        return out
 #
 
 
