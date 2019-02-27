@@ -1,6 +1,56 @@
 # collection of utility functions
+from networks.LR import BoW, EmbBoW, EmbLR
+from networks.GRU import GRUmodel
 import os
+import torch
+import pickle
 
+
+# parse jupyter input, for easy use in jupyter notebook
+def jupyter_parser(arg):
+    try:
+        model = arg["model"]
+    except:
+        raise ValueError("no Model input")
+
+    try:
+        dataset = arg["train_data"]
+    except:
+        raise ValueError("no Train data input")
+
+    max_epoch=-1
+    try:
+        max_epoch = arg["max_epoch"]
+    except:
+        pass
+
+    load_epoch_idx=0
+    try:
+        load_epoch_idx = arg["load_epoch_idx"]
+    except:
+        pass
+
+    return model, dataset, max_epoch, load_epoch_idx
+
+# set model for training and test
+def set_model(opt):
+    model_dict = {"BoW": BoW, "EmbBoW": EmbBoW, "EmbLR": EmbLR, "GRU": GRUmodel}
+    try:
+        model = model_dict[opt.model_name](opt)
+    except:
+        raise ValueError('model name not supported')
+    return model
+
+# load test data
+def load_test_data(opt):
+    pass
+
+# load training data
+def load_training_data(opt):
+    data_path = os.path.join(opt.data_dir, opt.train_data_name)
+    with open(data_path, 'rb') as f:
+        dataset = torch.from_numpy(pickle.load(f))
+    return dataset
 
 # make directory if not already existed
 def mkdir(target_dir):

@@ -1,6 +1,4 @@
 # for model training
-from networks.LR import BoW, EmbBoW, EmbLR
-from networks.GRU import GRUmodel
 from options.base_options import BaseOption
 from utils import util
 from utils.dataloader import CustomDataLoader
@@ -26,10 +24,16 @@ class Train:
         # jupyter parser is for easy use in jupyter notebook, 
         # -- assuming has at least model & train_data as inputs
         if len(jupyter_input) != 0:
-            self._jupyter_parser(jupyter_input)
+            self._model, self._dataset, max_epoch, load_epoch_idx = util.jupyter_parser(jupyter_input)
+            if max_epoch > 0:
+                self._opt.max_epoch = max_epoch
+            if load_epoch_idx > 0:
+                self._opt.load_epoch_idx = load_epoch_idx
         else:
-            self._load_training_data()
-            self._set_model()
+            self._dataset = util.load_training_data(self._opt)
+            self._model = util.set_model(self._opt)
+        if self._opt.valid_num > 0:
+            self._dataset = self._dataset[:-self._opt.valid_num, :]
         self._training_size = self._dataset.shape[0]
 
         # setup loss function and optimizer
@@ -55,7 +59,7 @@ class Train:
             self._model.trained = True
 
     def _train(self):
-        print("\nStart training model: %s" % (str(self._model)))
+        print("\nStart training model: \n%s" % (str(self._model)))
         # condition for continued training
         if self._start_epoch > 0:
             assert self._start_epoch < self._opt.max_epoch, \
@@ -122,6 +126,9 @@ class Train:
         # end of display progress
         print(" done")
 
+    def _display_progress(self):
+        pass
+
     def _save_opt(self, idx):
         '''
         idx is from model.save, equal to model.training_times
@@ -155,45 +162,6 @@ class Train:
         '''
         self._model.load(idx)
         self._load_opt(idx)
-
-    def _jupyter_parser(self, arg):
-        try:
-            self._model = arg["model"]
-        except:
-            raise ValueError("no Model input")
-
-        try:
-            self._dataset = arg["train_data"]
-        except:
-            raise ValueError("no Train data input")
-        
-        max_epoch=-1
-        try:
-            max_epoch = arg["max_epoch"]
-        except:
-            pass
-        if max_epoch > 0:
-            self._opt.max_epoch = max_epoch
-
-        load_epoch_idx=0
-        try:
-            load_epoch_idx = arg["load_epoch_idx"]
-        except:
-            pass
-        if load_epoch_idx > 0:
-            self._opt.load_epoch_idx = load_epoch_idx
-
-    def _set_model(self):
-        model_dict = {"BoW": BoW, "EmbBoW": EmbBoW, "EmbLR": EmbLR, "GRU": GRUmodel}
-        try:
-            self._model = model_dict[self._opt.model_name](self._opt)
-        except:
-            raise ValueError('model name not supported')
-
-    def _load_training_data(self):
-        data_path = os.path.join(self._opt.data_dir, self._opt.train_data_name)
-        with open(data_path, 'rb') as f:
-            self._dataset = torch.from_numpy(pickle.load(f))
 
 
 if __name__ == '__main__':

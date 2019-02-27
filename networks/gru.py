@@ -21,7 +21,7 @@ class GRUmodel(BaseNetwork):
         ## below for rnn layer
         self._number_layers = 1
         self._input_size = self._emb_size # 300
-        self._cell_hidden_size = self._input_size # for test
+        self._cell_hidden_size = 128
         self._cell_dropout = 0 # no dropout in GRU for now
         self._bidirectional = False
         self._num_dir = 2 if self._bidirectional else 1
@@ -29,7 +29,6 @@ class GRUmodel(BaseNetwork):
         
         # define layers
         self.embed = nn.Embedding(self._vocab_size+2, self._emb_size)
-        self.dropout = nn.Dropout(self._dropout_rate)
 #         rnnL = [] # gru layer
 #         for i in range(self._number_layers):
 #             inp_size = self._input_size if i == 0 else self._cell_hidden_size
@@ -47,8 +46,10 @@ class GRUmodel(BaseNetwork):
                           dropout = self._cell_dropout,
                           bidirectional = self._bidirectional
                          )
-        self.linear1 = nn.Linear(self._cell_hidden_size, self._hidden_size)
-        self.linear2 = nn.Linear(self._hidden_size, self._output_size)
+        self.dropout = nn.Dropout(self._dropout_rate)
+        # self.linear1 = nn.Linear(self._cell_hidden_size, self._hidden_size)
+        # self.linear2 = nn.Linear(self._hidden_size, self._output_size)
+        self.linear = nn.Linear(self._cell_hidden_size, self._output_size)
         
         # initialize weights of layers
         self.init_weight()
@@ -71,16 +72,15 @@ class GRUmodel(BaseNetwork):
         X = self.embed(idx_seq) # X:(b, seqlen, embdim)
         h = Variable(torch.zeros(self._h_state_vsize, idx_seq.shape[0], self._cell_hidden_size))
         X, h = self.gru(X, h)
-        X = self.dropout(X)
-        encoding = F.relu(self.linear1(X[:,-1,:]))
+        encoding = self.dropout(X[:,-1,:])
         if use_encoding:
             return encoding
-        out = self.linear2(encoding).view(-1,self._output_size)
+        out = self.linear(encoding).view(-1,self._output_size)
+        # X = self.dropout(X)
+        # encoding = F.relu(self.linear1(X[:,-1,:]))
+        # if use_encoding:
+        #     return encoding
+        # out = self.linear2(encoding).view(-1,self._output_size)
         return out
 
 #
-
-
-
-
-

@@ -52,7 +52,7 @@ class BaseNetwork(torch.nn.Module):
 
         f1score   = 2.*TP/(fA+fB)
         recall    = TP/fB
-        precision = TP/fA
+        precision = TP/fA if fA > 0. else -1.
         accuracy  = (1. - fC/float(total_num))*100.
 
         print("Predicted Positive: %d" % (fA))
