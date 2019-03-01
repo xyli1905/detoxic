@@ -73,7 +73,7 @@ class Train:
 
     def _train_epoch(self, i_epoch):
         # display records for the number of trained iters
-        print(" 0%s"%("%"), end='')
+        print(" 0%s"%("%"), end='', flush=True)
         p = 0.1
 
         for i_train_batch, train_batch in enumerate(self._data_train):
@@ -82,11 +82,11 @@ class Train:
 
             # update & display progress
             if (i_train_batch+1)*self._opt.batch_size >= p*self._training_size:
-                print(" - %.0f%s" %(100.*p,"%"), end='')
+                print(" - %.0f%s" %(100.*p,"%"), end='', flush=True)
                 p += 0.1
 
         # end of display progress
-        print(" done")
+        print(" done", flush=True)
 
     def _display_progress(self):
         pass

@@ -26,7 +26,7 @@ class BaseOption:
 
         # general options for training
         self._parser.add_argument('--is_train', type=self.boolean_string, default=True, help='flag showing if the model is in training')
-        self._parser.add_argument('--max_epoch', type=int, default=6, help='number of epochs for training')
+        self._parser.add_argument('--max_epoch', type=int, default=5, help='number of epochs for training')
         self._parser.add_argument('--load_epoch_idx', type=int, default=0, help='idx of epoch for loading')
         self._parser.add_argument('--batch_size', type=int, default=64, help='number of data points in one batch')
         self._parser.add_argument('--save_freq', type=int, default=1, help='frequency (/epoch) for saving model')
