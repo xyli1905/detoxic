@@ -2,6 +2,9 @@
 from .basemodel import BaseModel
 import torch
 import torch.nn as nn
+import numpy as np
+import os
+import pickle
 
 
 class BaselineModel(BaseModel):
@@ -24,11 +27,19 @@ class BaselineModel(BaseModel):
         else:
             raise ValueError('model.forward is not for training')
 
-    def update_parameters(self, batch_data):
+    def update_parameters(self, batch_data, idx, print_flag=False, debug_flag=False):
         if self._is_train:
             # forward
             y_pred = self._network.forward(batch_data[:, :-1])
             Loss = self._lossfun(y_pred, batch_data[:, -1])
+
+            # display and debug
+            if print_flag:
+                print(" -> current loss is %.5f" % Loss, flush=True)
+                if debug_flag:
+                    fname = "debug_{}_iter.txt".format(str(idx))
+                    debug_path = os.path.join(self._opt.debug_dir, fname)
+                    self._network.weight_debug(debug_path)
 
             # backprop
             self._optimizer.zero_grad()

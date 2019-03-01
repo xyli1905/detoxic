@@ -71,24 +71,31 @@ class Train:
             # updata learning rate
             # if i_epoch > ...
 
+        # end of training
+        print("", flush=True)
+
     def _train_epoch(self, i_epoch):
         # display records for the number of trained iters
-        print(" 0%s"%("%"), end='', flush=True)
-        p = 0.1
+        loss_check_count = 0
+        total_iter = self._training_size
 
         for i_train_batch, train_batch in enumerate(self._data_train):
 
-            self._model.update_parameters(train_batch)
-
             # update & display progress
-            if (i_train_batch+1)*self._opt.batch_size >= p*self._training_size:
-                print(" - %.0f%s" %(100.*p,"%"), end='', flush=True)
-                p += 0.1
+            num_iter = (i_train_batch+1)*self._opt.batch_size
+            print_flag = (int(num_iter/self._opt.loss_check_freq) != loss_check_count) \
+                         and (loss_check_count < self._opt.max_loss_check)
+            if print_flag:
+                print("  [%6.2f%s,  %7d / %7d]" % \
+                      (float(num_iter)/float(total_iter)*100., "%", num_iter, total_iter), end='')
+                loss_check_count += 1
+
+            self._model.update_parameters(train_batch, num_iter, print_flag, self._opt.is_debug)
 
         # end of display progress
         print(" done", flush=True)
 
-    def _display_progress(self):
+    def _display_progress(self, num_iter, total_iter):
         pass
 
 
