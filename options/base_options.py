@@ -14,36 +14,43 @@ class BaseOption:
 
         # model options
         self._parser.add_argument('--model_type', type=str, default='baseline', help='type of model: baseline, rnn, encoder-decoder')
-        self._parser.add_argument('--model_name', type=str, default='GRU', help='name of the model used')
+        self._parser.add_argument('--network_name', type=str, default='EmbLR', help='name of the model used')
 
         # data options
         self._parser.add_argument('--train_data_name', type=str, default='train_mat.pkl', help='name for training data')
+        # self._parser.add_argument('--test_data_name', type=str, default='test_mat.pkl', help='name for test data')
         self._parser.add_argument('--vocab_name', type=str, default='vocab.pkl', help='file name for processed vocabulary')
         self._parser.add_argument('--pretrained_weight_name', type=str, default='pretrained_weight.pkl',
                                   help='file name for processed pretrained weight')
         self._parser.add_argument('--trainable_emb', type=bool, default=False, help='whether allow update pretrained embedding')
 
         # general options for training
-        #for test we take the last valid_num many data as the validation set
-        self._parser.add_argument('--valid_num', type=int, default=100000, help='size of validation set')
-        self._parser.add_argument('--max_epoch', type=int, default=1, help='number of epochs for training')
+        self._parser.add_argument('--is_train', type=self.boolean_string, default=True, help='flag showing if the model is in training')
+        self._parser.add_argument('--max_epoch', type=int, default=6, help='number of epochs for training')
         self._parser.add_argument('--load_epoch_idx', type=int, default=0, help='idx of epoch for loading')
         self._parser.add_argument('--batch_size', type=int, default=64, help='number of data points in one batch')
         self._parser.add_argument('--save_freq', type=int, default=1, help='frequency (/epoch) for saving model')
-        self._parser.add_argument('--lr', type=float, default=0.01, help='learning rate')
+        self._parser.add_argument('--lr', type=float, default=0.04, help='learning rate')
+        #for test we take the last valid_num many data as the validation set
+        self._parser.add_argument('--valid_num', type=int, default=100000, help='size of validation set')
 
         # options for triplet loss
-        self._parser.add_argument('--triplet', type=bool, default=False, help='whether use triplet loss in training')
+        self._parser.add_argument('--triplet', type=self.boolean_string, default=False, help='whether use triplet loss in training')
         self._parser.add_argument('--margin', type=float, default=0.04, help='margin in triplet loss')
-        self._parser.add_argument('--iter_size', type=int, default=10000, help='number of triplets in a epoch')
+        self._parser.add_argument('--iter_size', type=int, default=100000, help='number of triplets in a epoch')
 
         self._initialized = True
+
+    def boolean_string(self, s):
+        if s not in {'False', 'True'}:
+            raise ValueError('Not a valid boolean string')
+        return s == 'True'
 
     def parse(self):
         if not self._initialized:
             self.initialize()
 
-        self._opt = self._parser.parse_args(args=[])
+        self._opt = self._parser.parse_args()
 
         args = vars(self._opt)
 

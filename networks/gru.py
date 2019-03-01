@@ -11,11 +11,10 @@ class GRUmodel(BaseNetwork):
     def __init__(self, opt):
         super(GRUmodel, self).__init__(opt)
         self.name = "baseGRU"
-        self._opt = opt
         
         # define parameters
         self._setup_emb()
-        self._hidden_size = 64
+        # self._hidden_size = 64
         self._output_size = 2 # two labels 0,1
         self._dropout_rate = 0.2
         ## below for rnn layer
@@ -29,17 +28,6 @@ class GRUmodel(BaseNetwork):
         
         # define layers
         self.embed = nn.Embedding(self._vocab_size+2, self._emb_size)
-#         rnnL = [] # gru layer
-#         for i in range(self._number_layers):
-#             inp_size = self._input_size if i == 0 else self._cell_hidden_size
-#             rnnL.append(nn.GRU(input_size = inp_size, 
-#                                hidden_size = self._cell_hidden_size, 
-#                                batch_first = True, # (batch, seqlen, embdim)
-#                                dropout = self._cell_dropout,
-#                                bidirectional = self._bidirectional
-#                               )
-#                        )
-#         self.gru = nn.Sequential(*rnnL)
         self.gru = nn.GRU(input_size = self._input_size, 
                           hidden_size = self._cell_hidden_size, 
                           batch_first = True, # (batch, seqlen, embdim)
@@ -47,8 +35,6 @@ class GRUmodel(BaseNetwork):
                           bidirectional = self._bidirectional
                          )
         self.dropout = nn.Dropout(self._dropout_rate)
-        # self.linear1 = nn.Linear(self._cell_hidden_size, self._hidden_size)
-        # self.linear2 = nn.Linear(self._hidden_size, self._output_size)
         self.linear = nn.Linear(self._cell_hidden_size, self._output_size)
         
         # initialize weights of layers
@@ -76,11 +62,26 @@ class GRUmodel(BaseNetwork):
         if use_encoding:
             return encoding
         out = self.linear(encoding).view(-1,self._output_size)
-        # X = self.dropout(X)
-        # encoding = F.relu(self.linear1(X[:,-1,:]))
-        # if use_encoding:
-        #     return encoding
-        # out = self.linear2(encoding).view(-1,self._output_size)
         return out
 
 #
+#         rnnL = [] # gru layer
+#         for i in range(self._number_layers):
+#             inp_size = self._input_size if i == 0 else self._cell_hidden_size
+#             rnnL.append(nn.GRU(input_size = inp_size, 
+#                                hidden_size = self._cell_hidden_size, 
+#                                batch_first = True, # (batch, seqlen, embdim)
+#                                dropout = self._cell_dropout,
+#                                bidirectional = self._bidirectional
+#                               )
+#                        )
+#         self.gru = nn.Sequential(*rnnL)
+
+# self.linear1 = nn.Linear(self._cell_hidden_size, self._hidden_size)
+# self.linear2 = nn.Linear(self._hidden_size, self._output_size)
+
+# X = self.dropout(X)
+# encoding = F.relu(self.linear1(X[:,-1,:]))
+# if use_encoding:
+#     return encoding
+# out = self.linear2(encoding).view(-1,self._output_size)

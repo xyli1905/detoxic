@@ -1,4 +1,3 @@
-from options.base_options import BaseOption
 import torch
 from torch.utils.data import DataLoader
 import numpy as np
@@ -7,6 +6,18 @@ import time
 import os
 
 
+# load test data
+def load_test_data(opt):
+    pass
+
+# load training data
+def load_training_data(opt):
+    data_path = os.path.join(opt.data_dir, opt.train_data_name)
+    with open(data_path, 'rb') as f:
+        dataset = torch.from_numpy(pickle.load(f))
+    return dataset
+
+# self defined dataloader
 class CustomDataLoader:
     def __init__(self, data, opt):
         # note data is torch.tensor

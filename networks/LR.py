@@ -17,7 +17,6 @@ class BoW(BaseNetwork):
     def __init__(self, opt):
         super(BoW, self).__init__(opt)
         self.name = "BoW"
-        self._opt = opt
 
         # define parameters
         self._load_vocab()
@@ -63,7 +62,6 @@ class EmbBoW(BaseNetwork):
     def __init__(self, opt):
         super(EmbBoW, self).__init__(opt)
         self.name = "EmbBoW"
-        self._opt = opt
         
         # define parameters
         self._setup_emb()
@@ -121,15 +119,12 @@ class EmbBoW(BaseNetwork):
     
 
 '''model EmbLR
-    note in this notebook, vocab & Pweight are global variables
-    in this new version, we set W -> (1,300),
-    namely use embeddings to identify words & assign them weights
+
 '''
 class EmbLR(BaseNetwork):
     def __init__(self, opt):
         super(EmbLR, self).__init__(opt)
         self.name = "EmbLR"
-        self._opt = opt
         
         # define parameters
         self._setup_emb()
