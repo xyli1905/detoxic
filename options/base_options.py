@@ -22,7 +22,7 @@ class BaseOption:
         self._parser.add_argument('--vocab_name', type=str, default='vocab.pkl', help='file name for processed vocabulary')
         self._parser.add_argument('--pretrained_weight_name', type=str, default='pretrained_weight.pkl',
                                   help='file name for processed pretrained weight')
-        self._parser.add_argument('--trainable_emb', type=bool, default=False, help='whether allow update pretrained embedding')
+        self._parser.add_argument('--trainable_emb', type=self.boolean_string, default=False, help='whether allow update pretrained embedding')
 
         # general options for training
         self._parser.add_argument('--is_train', type=self.boolean_string, default=True, help='flag showing if the model is in training')
