@@ -89,7 +89,7 @@ class EmbBoW(BaseNetwork):
         
     def init_weight(self):
         self.embed.weight.data.copy_(self.pretrained_weight)
-        self.embed.weight.requires_grad = self._opt.trainable_emb
+        self.embed.weight.requires_grad = self._opt.is_emb_trainable
         # with other layers defaultly initialized
     
     def weighted_embed(self, x, seq):
@@ -128,7 +128,7 @@ class EmbLR(BaseNetwork):
         
         # define parameters
         self._setup_emb()
-        self._hidden_size = 64
+        self._hidden_size = 128#64 debug
         self._output_size = 2 # two labels 0,1
         ##self-defined model parameter
         self.W = nn.Parameter(torch.randn(self._emb_size, 1))
@@ -152,7 +152,7 @@ class EmbLR(BaseNetwork):
         
     def init_weight(self):
         self.embed.weight.data.copy_(self.pretrained_weight)
-        self.embed.weight.requires_grad = self._opt.trainable_emb
+        self.embed.weight.requires_grad = self._opt.is_emb_trainable
         # with other layers defaultly initialized
 
     def emb_selfcorr(self, x):

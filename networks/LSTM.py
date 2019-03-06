@@ -15,26 +15,26 @@ class LSTMmodel(BaseNetwork):
         
         # define parameters
         self._setup_emb()
-        self._hidden_size = 64
+        # self._hidden_size = 64
         self._output_size = 2 # two labels 0,1
-        self._dropout_rate = 0.2
+        self._dropout_rate = 0
         ## below for rnn layer
         self._number_layers = 1
         self._input_size = self._emb_size # 300
         self._cell_hidden_size = 128
-        self._cell_dropout = 0 # no dropout in GRU for now
+        self._cell_dropout = 0 # no dropout for now
         self._bidirectional = False
         self._num_dir = 2 if self._bidirectional else 1
-        self._h_state_vsize = self._number_layers*self._num_dir
+        self._state_vsize = self._number_layers*self._num_dir
         
         # define layers
         self.embed = nn.Embedding(self._vocab_size+2, self._emb_size)
-        self.gru = nn.GRU(input_size = self._input_size, 
-                          hidden_size = self._cell_hidden_size, 
-                          batch_first = True, # (batch, seqlen, embdim)
-                          dropout = self._cell_dropout,
-                          bidirectional = self._bidirectional
-                         )
+        self.lstm = nn.LSTM(input_size = self._input_size, 
+                            hidden_size = self._cell_hidden_size, 
+                            batch_first = True, # (batch, seqlen, embdim)
+                            dropout = self._cell_dropout,
+                            bidirectional = self._bidirectional
+                           )
         self.dropout = nn.Dropout(self._dropout_rate)
         self.linear = nn.Linear(self._cell_hidden_size, self._output_size)
         
@@ -52,13 +52,14 @@ class LSTMmodel(BaseNetwork):
         
     def init_weight(self):
         self.embed.weight.data.copy_(self.pretrained_weight)
-        self.embed.weight.requires_grad = self._opt.trainable_emb
+        self.embed.weight.requires_grad = self._opt.is_emb_trainable
         # with other layers defaultly initialized
         
     def forward(self, idx_seq, use_encoding=False):
         X = self.embed(idx_seq) # X:(b, seqlen, embdim)
-        h = Variable(torch.zeros(self._h_state_vsize, idx_seq.shape[0], self._cell_hidden_size))
-        X, h = self.gru(X, h)
+        # h_init = Variable(torch.randn(self._state_vsize, idx_seq.shape[0], self._cell_hidden_size))
+        # c_init = Variable(torch.randn(self._state_vsize, idx_seq.shape[0], self._cell_hidden_size))
+        X, (h, c) = self.lstm(X, None)
         encoding = self.dropout(X[:,-1,:])
         if use_encoding:
             return encoding

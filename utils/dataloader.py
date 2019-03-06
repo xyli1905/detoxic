@@ -24,8 +24,15 @@ class CustomDataLoader:
         self.name = 'customized_dataloader'
         self._opt = opt
 
-        if self._opt.triplet:
+        if self._opt.is_triplet:
             # anchor & positive from _data_pos; negtive from _data_neg
+            self._data_pos = data[data[:,-1] == 1]
+            self._data_neg = data[data[:,-1] == 0]
+            self._pos_size = self._data_pos.shape[0]
+            self._neg_size = self._data_neg.shape[0]
+            # for classifier
+            self._data = data
+        elif self._opt.is_balanced:
             self._data_pos = data[data[:,-1] == 1]
             self._data_neg = data[data[:,-1] == 0]
             self._pos_size = self._data_pos.shape[0]
@@ -37,6 +44,19 @@ class CustomDataLoader:
     def load_batches(self):
         return DataLoader(self._data, batch_size=self._opt.batch_size,
                           shuffle=True, drop_last=False)
+
+    def load_balanced(self):
+        negative_idx = np.random.choice(self._neg_size,
+                                        size=(self._pos_size,),
+                                        replace=False
+                                       )
+
+        negative = self._data_neg[negative_idx]
+        data = torch.cat((self._data_pos, negative), 0)
+        data_size = 2*self._pos_size
+
+        return DataLoader(data, batch_size=self._opt.batch_size,
+                          shuffle=True, drop_last=False), data_size
 
     def load_triplets(self):
         assert self._opt.iter_size > self._opt.batch_size, \

@@ -29,14 +29,14 @@ def find_file(file_mark, file_dir, epoch_idx):
         for file in os.listdir(file_dir):
             if file.startswith(file_mark):
                 idx_num = max(idx_num, int(file.split('_')[2]))
-        assert idx_num >= 0, 'opt file not found'
+        assert idx_num >= 0, 'file not found'
     else:
         found = False
         for file in os.listdir(file_dir):
             if file.startswith(file_mark):
-                found = int(file.split('_')[2]) == epoch_idx
+                found = int(file.split('_')[-2]) == epoch_idx
                 if found: break
-        assert found, 'opt file for epoch %i not found' % epoch_idx
+        assert found, 'file for epoch %i not found in %s' % (epoch_idx, file_mark)
         idx_num = epoch_idx
 
     fname = '{}_{}_id.pth'.format(file_mark, str(idx_num))

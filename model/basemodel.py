@@ -1,6 +1,7 @@
 # model prototype
 from networks.LR import BoW, EmbBoW, EmbLR
 from networks.GRU import GRUmodel
+from networks.LSTM import LSTMmodel
 from utils.util import save_param, load_param
 import torch
 import torch.nn as nn
@@ -13,11 +14,13 @@ import pickle
 class BaseModel:
     def __init__(self, opt):
         self._name = "BaseModel"
-        self._net_dict = {"BoW": BoW, "EmbBoW": EmbBoW, "EmbLR": EmbLR, "GRU": GRUmodel}
+        self._net_dict = {"BoW": BoW, "EmbBoW": EmbBoW, "EmbLR": EmbLR, "GRU": GRUmodel, "LSTM": LSTMmodel}
         self._opt = opt
         self._set_model_directory()
         self._is_train = opt.is_train
         self.model_epoch = 0
+        self._accum_loss = 0.
+        self._eta = 1.
 
 
     def set_input(self, data):

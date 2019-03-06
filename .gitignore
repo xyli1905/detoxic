@@ -118,3 +118,5 @@ data_proc/processed_data/
 /backup/
 
 .vscode/
+
+debug
