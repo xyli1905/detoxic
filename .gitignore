@@ -120,3 +120,5 @@ data_proc/processed_data/
 .vscode/
 
 debug
+
+option_list.txt

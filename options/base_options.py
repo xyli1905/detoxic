@@ -51,10 +51,11 @@ class BaseOption:
         self._parser.add_argument('--iter_size', type=int, default=100000, help='number of triplets in a epoch')
         self._parser.add_argument('--round_num', type=int, default=1, help='number of rounds to train encoder and classifier')
 
-        # for local test we take the last 'valid_num' many data as the validation set
+        # for local test we take the last 'valid_num' sentences as the validation set
         self._parser.add_argument('--valid_num', type=int, default=100000, help='size of validation set')
 
         # options for save and display (same for C and E)
+        self._parser.add_argument('--tag', type=str, default="null", help='tag for distinguishing the saved files')
         self._parser.add_argument('--save_freq', type=int, default=1, help='frequency (/epoch) for saving model')
         self._parser.add_argument('--loss_check_freq', type=int, default=-1, help='frequency (/iters) for outputing loss')
         self._parser.add_argument('--max_loss_check', type=int, default=10, help='upper bound for number of loss check')

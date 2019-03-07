@@ -73,11 +73,11 @@ class BaselineModel(BaseModel):
         self._lossfun = nn.CrossEntropyLoss()
 
     def save(self, epoch_idx):
-        name = self._classifier.name
+        name = "{}_{}".format(self._classifier.name, self._opt.tag)
         self._save_network(self._classifier, name, epoch_idx)
         self._save_optimizer(self._optimizer, name, epoch_idx)
 
     def load(self, epoch_idx):
-        name = self._classifier.name
+        name = "{}_{}".format(self._classifier.name, self._opt.tag)
         self._load_network(self._classifier, name, epoch_idx)
         self._load_optimizer(self._optimizer, name, epoch_idx)

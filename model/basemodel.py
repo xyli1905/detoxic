@@ -51,21 +51,30 @@ class BaseModel:
                                 batch_size=1000,
                                 shuffle=False,
                                 drop_last=False)
-        A = 0.
-        B = 0.
-        C = 0.
+        A  = 0.
+        B  = 0.
+        # C  = 0.
+        FP = 0.
+        FN = 0.
         for i_batch, eval_batch in enumerate(eval_data):
 
             batch_pred = self.predict(eval_batch[:,:-1])
             batch_diff = batch_pred - torch.squeeze(eval_batch[:,-1])
+            batch_diff_pos = batch_diff[batch_diff ==  1]
+            batch_diff_neg = batch_diff[batch_diff == -1]
 
-            A += torch.sum(batch_pred)
-            B += torch.sum(eval_batch[:,-1])
-            C += torch.sum(torch.abs(batch_diff))
+            A += torch.sum(batch_pred) #pred P
+            B += torch.sum(eval_batch[:,-1]) #actual P
+            # C += torch.sum(torch.abs(batch_diff))
+            FP += torch.sum(batch_diff_pos)
+            FN -= torch.sum(batch_diff_neg)
 
-        fA = float(A)
-        fB = float(B)
-        fC = float(C)
+        fA  = float(A)
+        fB  = float(B)
+        fFP = float(FP)
+        fFN = float(FN)
+        fC  = fFP + fFN
+        
         TP = (fA+fB-fC)/2.
 
         f1score   = 2.*TP/(fA+fB)
@@ -75,7 +84,7 @@ class BaseModel:
 
         print("Predicted Positive: %d" % (fA))
         print("   Actual Positive: %d" % (fB))
-        print(" Incorrect Predict: %d" % (fC))
+        print(" Incorrect Predict: %d(total) %d(FP) %d(FN)" % (fC, fFP, fFN))
         print("\n F1 Score: %.5f" % (f1score))
         print("   Recall: %.5f" % (recall))
         print("Precision: %.5f" % (precision))

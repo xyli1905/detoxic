@@ -1,4 +1,5 @@
 from .basenetwork import BaseNetwork
+from .embedding import EmbeddingLayer
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -64,33 +65,21 @@ class EmbBoW(BaseNetwork):
         self.name = "EmbBoW"
         
         # define parameters
-        self._setup_emb()
         self._hidden_size = 64
-        self._output_size = 2 # two labels 0,1
-        ##self-defined model parameter
-        self.W = nn.Parameter(torch.randn(self._vocab_size+2))
-        
+        self._output_size = 2
+
         # define layers
-        self.embed   = nn.Embedding(self._vocab_size+2, self._emb_size)
+        self.embed = EmbeddingLayer(self._opt)
+        self.W = nn.Parameter(torch.randn(self.embed.vocab_size + 2))
         self.linear1 = nn.Linear(self._emb_size, self._hidden_size)
         self.linear2 = nn.Linear(self._hidden_size, self._output_size)
         
         # initialize weights of layers
         self.init_weight()
-
-    def _setup_emb(self):
-        emb_path = os.path.join(self._opt.data_dir, self._opt.pretrained_weight_name)
-        with open(emb_path, 'rb') as f:
-            # pretrained_weight.pkl is np.ndarray
-            self.pretrained_weight = torch.from_numpy(pickle.load(f))
-
-        self._vocab_size = self.pretrained_weight.shape[0] - 2
-        self._emb_size = self.pretrained_weight.shape[1]
         
     def init_weight(self):
-        self.embed.weight.data.copy_(self.pretrained_weight)
-        self.embed.weight.requires_grad = self._opt.is_emb_trainable
-        # with other layers defaultly initialized
+        # fornow leave layers (except emb) defaultly initialized
+        pass
     
     def weighted_embed(self, x, seq):
         '''
@@ -126,40 +115,28 @@ class EmbLR(BaseNetwork):
         super(EmbLR, self).__init__(opt)
         self.name = "EmbLR"
         
-        # define parameters
-        self._setup_emb()
+        # define layer size
         self._hidden_size = 128#64 debug
-        self._output_size = 2 # two labels 0,1
-        ##self-defined model parameter
-        self.W = nn.Parameter(torch.randn(self._emb_size, 1))
+        self._output_size = 2
         
         # define layers
-        self.embed   = nn.Embedding(self._vocab_size+2, self._emb_size)
-        self.linear1 = nn.Linear(self._emb_size, self._hidden_size)
+        self.embed = EmbeddingLayer(self._opt)
+        self.W = nn.Parameter(torch.randn(self.embed.emb_size, 1))
+        self.linear1 = nn.Linear(self.embed.emb_size, self._hidden_size)
         self.linear2 = nn.Linear(self._hidden_size, self._output_size)
         
         # initialize weights of layers
         self.init_weight()
-
-    def _setup_emb(self):
-        emb_path = os.path.join(self._opt.data_dir, self._opt.pretrained_weight_name)
-        with open(emb_path, 'rb') as f:
-            # pretrained_weight.pkl is np.ndarray
-            self.pretrained_weight = torch.from_numpy(pickle.load(f))
-
-        self._vocab_size = self.pretrained_weight.shape[0] - 2
-        self._emb_size = self.pretrained_weight.shape[1]
         
     def init_weight(self):
-        self.embed.weight.data.copy_(self.pretrained_weight)
-        self.embed.weight.requires_grad = self._opt.is_emb_trainable
-        # with other layers defaultly initialized
+        # fornow leave layers (except emb) defaultly initialized
+        pass
 
     def emb_selfcorr(self, x):
         '''
         basically do matmul(E.T, E), dim=(300, 300), kind of a self-correlation
         '''
-        output = torch.zeros((x.shape[0], self._emb_size, self._emb_size))
+        output = torch.zeros((x.shape[0], self.embed.emb_size, self.embed.emb_size))
         for i in range(x.shape[0]):
             output[i] = torch.mm(torch.t(x[i]), x[i])
         return output
