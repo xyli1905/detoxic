@@ -6,13 +6,8 @@ import torch.nn.functional as F
 import pickle
 import os
 
-'''NOTICE
-    All model below inherit class BaseNetwork, 
-    which provide common methods: predict, save and load
-'''
-
 '''model BoW
-    this is the Bag of Word LR model
+    the Bag of Word LR model (word count vectorization)
 '''
 class BoW(BaseNetwork):
     def __init__(self, opt):
@@ -21,7 +16,7 @@ class BoW(BaseNetwork):
 
         # define parameters
         self._load_vocab()
-        self._output_size = 2 # two labels 0,1
+        self._output_size = 2
         
         # define layers
         self.W = nn.Parameter(torch.randn(self._vocab_size+2, self._output_size))
@@ -32,14 +27,13 @@ class BoW(BaseNetwork):
         with open(vocab_path, 'rb') as f:
             # vocab.pkl is np.ndarray
             self.vocab = pickle.load(f)
-
         self._vocab_size = len(self.vocab)
     
     def weighted_words(self, seq):
         '''
-        note idx_seq must be a torch tensor of dtype torch.long
-        N is batch size, 60 is the limit of sentence len
-        below, W[idx_seq]:(N, 60), output:(N, 1, 300)
+        weighted sum of word-count voectors
+
+        idx_seq : input torch tensor of dtype torch.long
         '''
         output = torch.zeros((seq.shape[0], self._output_size))
         for i in range(seq.shape[0]):
@@ -49,15 +43,17 @@ class BoW(BaseNetwork):
             
     def forward(self, idx_seq):
         '''
-        note idx_seq must be a torch tensor of dtype torch.long
-        N is batch size, 60 is the limit of sentence len
+        idx_seq : input torch tensor of dtype torch.long
+        
+        Relevant dim parameters:
+         batchsize, sentencecutoff or B,S in short
         '''
-        out = self.weighted_words(idx_seq) # idx_seq:(N, 60), out:(N, 2)
+        out = self.weighted_words(idx_seq) # idx_seq:(B, S), out:(B, 2)
         return out
     
 
 '''model EmbBoW
-
+    modified Bag of Word model, with words represented by embedding vector
 '''
 class EmbBoW(BaseNetwork):
     def __init__(self, opt):
@@ -83,23 +79,26 @@ class EmbBoW(BaseNetwork):
     
     def weighted_embed(self, x, seq):
         '''
-        note idx_seq must be a torch tensor of dtype torch.long
-        N is batch size, 60 is the limit of sentence len
-        below, W[idx_seq]:(N, 60), output:(N, 1, 300)
+        Weighted sum of embedding vectors
+
+        x : embedding vector from previous layer
+        idx_seq : input torch tensor of dtype torch.long
         '''
         output = torch.zeros((seq.shape[0], 1, x.shape[2]))
         for i in range(seq.shape[0]):
             idxseq = seq[i:i+1]
             output[i] = torch.mm(self.W[idxseq], x[i])
         return output
-            
+
     def forward(self, idx_seq, use_encoding=False):
         '''
-        note idx_seq must be a torch tensor of dtype torch.long
-        N is batch size, 60 is the limit of sentence len
+        idx_seq : input torch tensor of dtype torch.long; 
+
+        Relevant dim parameters:
+         batchsize, sentencecutoff, embedsize or B,S,E in short
         '''
-        X = self.embed(idx_seq) # idx_seq:(N, 60), X:(N, 60, 300)
-        X = self.weighted_embed(X, idx_seq)
+        X = self.embed(idx_seq) # idx_seq:(B, S), X:(B, S, E)
+        X = self.weighted_embed(X, idx_seq) # X: (B, E)
         encoding = F.relu(self.linear1(X))
         if use_encoding:
             return encoding
@@ -108,7 +107,9 @@ class EmbBoW(BaseNetwork):
     
 
 '''model EmbLR
-
+    further modification of Bag of Word model, weight are not assigned to
+    a word but been calculated based on its embedding vector
+    roughly speaking, an no-memory RNN model
 '''
 class EmbLR(BaseNetwork):
     def __init__(self, opt):
@@ -134,7 +135,7 @@ class EmbLR(BaseNetwork):
 
     def emb_selfcorr(self, x):
         '''
-        basically do matmul(E.T, E), dim=(300, 300), kind of a self-correlation
+        basically do matmul(emb.T, emb), a kind of a self-correlation
         '''
         output = torch.zeros((x.shape[0], self.embed.emb_size, self.embed.emb_size))
         for i in range(x.shape[0]):
@@ -143,13 +144,14 @@ class EmbLR(BaseNetwork):
         
     def forward(self, idx_seq, use_encoding=False):
         '''
-        note idx_seq must be a torch tensor of dtype torch.long
-        N is batch size, 60: sentence_cutoff, 300: embedding_dim
-        input idx_seq:(N, 60)
+        idx_seq : input torch tensor of dtype torch.long
+
+        Relevant dim parameters:
+         batchsize, sentencecutoff, embedsize or B,S,E in short
         '''
-        X = self.embed(idx_seq)  # emb vec X:(N, 60, 300)
-        X = self.emb_selfcorr(X) # give corr mat: (N, 300, 300)
-        X = torch.squeeze(torch.matmul(X, self.W))   # weighted sum of embeddings (N, 300)
+        X = self.embed(idx_seq)  # emb vec X:(B, S, E)
+        X = self.emb_selfcorr(X) # give corr mat: (B, E, E)
+        X = torch.squeeze(torch.matmul(X, self.W)) # weighted sum of embed: (B, E)
         encoding = F.relu(self.linear1(X))
         if use_encoding:
             return encoding

@@ -8,9 +8,12 @@ from torch.autograd import Variable
 import pickle
 import os
 
-class LSTMmodel(BaseNetwork):
+'''model LSTM
+    base LSTM layer, can be: 1- or 2-layer; uni- or bi-directional
+'''
+class LSTMLayer(BaseNetwork):
     def __init__(self, opt):
-        super(LSTMmodel, self).__init__(opt)
+        super(LSTMLayer, self).__init__(opt)
         self.name = "LSTM"
         self._opt = opt
         

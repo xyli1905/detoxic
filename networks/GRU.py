@@ -8,9 +8,12 @@ from torch.autograd import Variable
 import pickle
 import os
 
-class GRUmodel(BaseNetwork):
+'''model GRU
+    base GRU layer, can be: 1- or 2-layer; uni- or bi-directional
+'''
+class GRULayer(BaseNetwork):
     def __init__(self, opt):
-        super(GRUmodel, self).__init__(opt)
+        super(GRULayer, self).__init__(opt)
         self.name = "GRU"
 
         # define parameters
