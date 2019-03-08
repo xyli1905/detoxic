@@ -38,7 +38,7 @@ class Train:
 
     def _train(self):
         print("\nStart training model for: \n%s" % (str(self._model._classifier)))
-        print("initial learning rate: %s" % self._opt.lr_C)
+        print("initial learning rate: %s" % self._opt.lr_C, flush=True)
         # condition for continued training
         if self._start_epoch > 0:
             assert self._start_epoch < self._opt.max_epoch_C, \
