@@ -146,21 +146,21 @@ def main():
     Eproc.dump_weight_mat_pkl(pretrained_weight, file_name="pretrained_weight.pkl")
 
     # test for pretrained weight
-    emb_dim = Eproc.emb_dim
-    embed = Embedding(len(vocab), emb_dim)
-    embed.weight.data.copy_(torch.from_numpy(pretrained_weight))
+    # emb_dim = Eproc.emb_dim
+    # embed = Embedding(len(vocab), emb_dim)
+    # embed.weight.data.copy_(torch.from_numpy(pretrained_weight))
 
-    word_to_idx = {word: i for i, word in enumerate(vocab)}
+    # word_to_idx = {word: i for i, word in enumerate(vocab)}
 
-    test_word = "card"
-    torch_word_idx = torch.tensor(word_to_idx[test_word], dtype=torch.long)
+    # test_word = "card"
+    # torch_word_idx = torch.tensor(word_to_idx[test_word], dtype=torch.long)
 
-    print("\ntest for output of embedding layer")
-    print(embed(torch_word_idx))
-    print(embedding[test_word])
+    # print("\ntest for output of embedding layer")
+    # print(embed(torch_word_idx))
+    # print(embedding[test_word])
 
-    # release mem used by embedding (~5.4G)
-    Eproc.release_mem(embedding)
+    # # release mem used by embedding (~5.4G)
+    # Eproc.release_emb_mem(embedding)
 
 
 if __name__ == '__main__':
