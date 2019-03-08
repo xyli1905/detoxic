@@ -58,7 +58,7 @@ class Train:
 
             # train epoch
             print("\nStart epoch %d / %d, \t at %s" % \
-                  (i_epoch, self._opt.max_epoch_C, time.asctime()))
+                  (i_epoch, self._opt.max_epoch_C, time.asctime()), flush=True)
             self._train_epoch(i_epoch)
 
             # save model after each epoch here, note i_epoch is 0-based
