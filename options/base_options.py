@@ -11,6 +11,7 @@ class BaseOption:
         # directory options
         self._parser.add_argument('--chkp_dir', type=str, default='./checkpoints', help='directory storing trained models and optimizers')
         self._parser.add_argument('--data_dir', type=str, default='./data_proc/processed_data', help='directory storing preprocessed data')
+        self._parser.add_argument('--results_dir', type=str, default='./results', help='directory to store outputs of evaluation of a model')
 
         # options for debug
         self._parser.add_argument('--is_debug', type=self.boolean_string, default=False, help='flag for debug')
@@ -20,6 +21,11 @@ class BaseOption:
         self._parser.add_argument('--model_type', type=str, default='baseline', help='type of model: baseline, rnn, encoder-decoder')
         self._parser.add_argument('--classifier_net', type=str, default='LSTM', help='name of the classifier network used')
         self._parser.add_argument('--encoder_net', type=str, default='', help='name of the encoder network used')
+
+        # RNN options
+        self._parser.add_argument('--number_layers', type=int, default=1, help='number of RNN layers')
+        self._parser.add_argument('--is_bidirectional', type=self.boolean_string, default=False, help='whether be bidirectional')
+        self._parser.add_argument('--dropout_rate', type=float, default=0, help='dropout rate for output of RNN')
 
         # data options
         self._parser.add_argument('--train_data_name', type=str, default='train_mat.pkl', help='name for training data')
@@ -77,6 +83,10 @@ class BaseOption:
         # save args to file
         args = vars(self._opt)
         self._save(args)
+
+        # create results folder
+        if not os.path.exists(self._opt.results_dir):
+            os.makedirs(self._opt.results_dir)
 
         # create debug folder if need
         if self._opt.is_debug:

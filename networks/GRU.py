@@ -11,19 +11,19 @@ import os
 '''model GRU
     base GRU layer, can be: 1- or 2-layer; uni- or bi-directional
 '''
-class GRULayer(BaseNetwork):
+class GRUnet(BaseNetwork):
     def __init__(self, opt):
-        super(GRULayer, self).__init__(opt)
+        super(GRUnet, self).__init__(opt)
         self.name = "GRU"
 
         # define parameters
         self._output_size = 2
-        self._dropout_rate = 0
+        self._dropout_rate = opt.dropout_rate
         ## below for rnn layer
         self._cell_hidden_size = 128
-        self._num_layers = 1
+        self._num_layers = opt.number_layers
         self._cell_dropout = 0 # no internal dropout for now
-        self._bidirectional = False
+        self._bidirectional = opt.is_bidirectional
         self._num_dir = 2 if self._bidirectional else 1
         self._h_state_vsize = self._num_layers*self._num_dir
 
@@ -38,7 +38,7 @@ class GRULayer(BaseNetwork):
                           bidirectional = self._bidirectional
                          )
         self.dropout = nn.Dropout(self._dropout_rate)
-        self.linear = nn.Linear(self._cell_hidden_size, self._output_size)
+        self.linear = nn.Linear(self._cell_hidden_size*self._num_dir, self._output_size)
 
         # initialize weights of layers
         self.init_weight()

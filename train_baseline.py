@@ -10,9 +10,8 @@ import time
 import os
 
 
-'''
-NOTE the last two parameters are added for easy use in jupyter notebook
-will be removed in later versions
+'''NOTE
+    
 '''
 class Train:
     def __init__(self):
@@ -71,7 +70,7 @@ class Train:
             print("End of epoch %d / %d \t Time taken: %d sec (or % d min)" % \
                   (i_epoch, self._opt.max_epoch_C, time_cost, time_cost / 60.))
 
-            # updata learning rate
+            # may manually updata learning rate
             # if i_epoch > ...
 
         # end of training

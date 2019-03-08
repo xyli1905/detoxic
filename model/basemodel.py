@@ -1,7 +1,7 @@
 # model prototype
 from networks.LR import BoW, EmbBoW, EmbLR
-from networks.GRU import GRULayer
-from networks.LSTM import LSTMLayer
+from networks.GRU import GRUnet
+from networks.LSTM import LSTMnet
 from utils.util import save_param, load_param
 import torch
 import torch.nn as nn
@@ -9,12 +9,14 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 import os
 import pickle
+import pandas as pd
 
 
 class BaseModel:
     def __init__(self, opt):
         self._name = "BaseModel"
-        self._net_dict = {"BoW": BoW, "EmbBoW": EmbBoW, "EmbLR": EmbLR, "GRU": GRULayer, "LSTM": LSTMLayer}
+        self._net_dict = {"BoW": BoW, "EmbBoW": EmbBoW, "EmbLR": EmbLR,
+                          "GRU": GRUnet, "LSTM": LSTMnet}
         self._opt = opt
         self._set_model_directory()
         self._is_train = opt.is_train
@@ -24,20 +26,23 @@ class BaseModel:
 
 
     def set_input(self, data):
-        raise NotImplementedError('set_input not implemented for BaseModel')
+        raise NotImplementedError('set_input not implemented')
 
     def forward(self, input):
-        raise NotImplementedError('forword not implemented for BaseModel')
+        raise NotImplementedError('forword not implemented')
 
     def update_parameters(self, input):
-        raise NotImplementedError('update_parameters not implemented for BaseModel')
+        raise NotImplementedError('update_parameters not implemented')
 
     def update_learning_rate(self):
-        raise NotImplementedError('update_learning_rate not implemented for BaseModel')
+        raise NotImplementedError('update_learning_rate not implemented')
     
 
     def predict(self, idx_seq):
+        '''
         # 0: sincere; 1: toxic
+        presently threshold = 0.5
+        '''
         y = F.softmax(self.forward(idx_seq), dim=1)
         y_pred = torch.argmax(y, dim=1)
         return y_pred
@@ -51,9 +56,7 @@ class BaseModel:
                                 batch_size=1000,
                                 shuffle=False,
                                 drop_last=False)
-        A  = 0.
-        B  = 0.
-        # C  = 0.
+        predP   = 0.
         FP = 0.
         FN = 0.
         for i_batch, eval_batch in enumerate(eval_data):
@@ -63,32 +66,76 @@ class BaseModel:
             batch_diff_pos = batch_diff[batch_diff ==  1]
             batch_diff_neg = batch_diff[batch_diff == -1]
 
-            A += torch.sum(batch_pred) #pred P
-            B += torch.sum(eval_batch[:,-1]) #actual P
-            # C += torch.sum(torch.abs(batch_diff))
+            predP += torch.sum(batch_pred)
             FP += torch.sum(batch_diff_pos)
             FN -= torch.sum(batch_diff_neg)
 
-        fA  = float(A)
-        fB  = float(B)
-        fFP = float(FP)
-        fFN = float(FN)
-        fC  = fFP + fFN
+        TP = predP - FP
+        TN = total_num - predP - FN
+
+        # screen print & save
+        self._print_confusion_mat(TP, FP, FN, TN)
+        self._print_and_save_metric(TP, FP, FN, TN)
         
-        TP = (fA+fB-fC)/2.
+    def _print_confusion_mat(self, TP, FP, FN, TN):
+        sTP = "{}(TP)".format(str(int(TP)))
+        sFP = "{}(FP)".format(str(int(FP)))
+        sTN = "{}(TN)".format(str(int(TN)))
+        sFN = "{}(FN)".format(str(int(FN)))
 
-        f1score   = 2.*TP/(fA+fB)
-        recall    = TP/fB
-        precision = TP/fA if fA > 0. else -1.
-        accuracy  = (1. - fC/float(total_num))*100.
+        print("Confusion Matrix:")
+        print("{:>11}| {:^12} {:^12}".format("  ","Actual Pos", "Actual Neg"))
+        print("{:>11}|{}".format(4*"- ", 15*"- "))
+        print("{:>11}| {:^12} {:^12}".format("Pred Pos", sTP, sFP))
+        print("{:>11}| {:^12} {:^12}".format("Pred Neg", sFN, sTN))
 
-        print("Predicted Positive: %d" % (fA))
-        print("   Actual Positive: %d" % (fB))
-        print(" Incorrect Predict: %d(total) %d(FP) %d(FN)" % (fC, fFP, fFN))
+    def _print_and_save_metric(self, TP, FP, FN, TN):
+        fTP = float(TP)
+        fFP = float(FP)
+        fTN = float(TN)
+        fFN = float(FN)
+
+        f1score   = 2.*fTP/(2.*fTP+fFP+fFN)
+        recall    = fTP/(fFN+fTP)
+        precision = fTP/(fTP+fFP) if (fTP+fFP) > 0. else -1.
+        fallout   = fFP/(fFP+fTN)
+        accuracy  = 100.*(fTP+fTN)/(fTP+fFP+fTN+fFN)
+
         print("\n F1 Score: %.5f" % (f1score))
         print("   Recall: %.5f" % (recall))
         print("Precision: %.5f" % (precision))
+        print("  Fallout: %.5f" % (fallout))
         print(" Accuracy: %.5f%s" % (accuracy, "%"))
+        print("")
+
+        # save to csv file for easy use in the future
+        self._save_metric(fTP,fFP,fTN,fFN,f1score,recall,precision,fallout,accuracy)
+        
+
+    def _save_metric(self, fTP,fFP,fTN,fFN,f1score,recall,precision,fallout,accuracy):
+        Dict = {"TP": fTP,
+                "FP": fFP,
+                "TN": fTN,
+                "FN": fFN,
+                "F1": f1score,
+                "Recall": recall,
+                "Precision": precision,
+                "Fallout": fallout,
+                "Accuracy": accuracy/100.
+               }
+        
+        fname = "met_{}_{}.csv".format(str(self._opt.classifier_net), str(self._opt.tag))
+        fpath = os.path.join(self._opt.results_dir, fname)
+
+        if os.path.isfile(fpath):
+            df_old = pd.read_csv(fpath, index_col=0)
+            df_new = pd.DataFrame.from_dict(Dict, orient="index", columns=["epoch_"+str(self.model_epoch)])
+            df = pd.concat([df_old, df_new], axis = 1, sort=False)
+        else:
+            df = pd.DataFrame.from_dict(Dict, orient="index", columns=["epoch_"+str(self.model_epoch)])
+        df.to_csv(fpath)
+
+        print("metric for epoch %d saved/add to %s\n" % (self.model_epoch, fpath))
 
 
     def save(self, epoch_idx):
@@ -132,4 +179,4 @@ class BaseModel:
         '''
         loaded_idx =load_param(optimizer, self._model_dir, "optimizer", name, epoch_idx)
         self.model_epoch = loaded_idx
-    
+#
