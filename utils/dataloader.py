@@ -43,7 +43,7 @@ class CustomDataLoader:
 
     def load_batches(self):
         return DataLoader(self._data, batch_size=self._opt.batch_size,
-                          shuffle=True, drop_last=False)
+                          shuffle=True, drop_last=False, num_workers=self._opt.number_workers)
 
     def load_balanced(self):
         negative_idx = np.random.choice(self._neg_size,
@@ -56,7 +56,7 @@ class CustomDataLoader:
         data_size = 2*self._pos_size
 
         return DataLoader(data, batch_size=self._opt.batch_size,
-                          shuffle=True, drop_last=False), data_size
+                          shuffle=True, drop_last=False, num_workers=self._opt.number_workers), data_size
 
     def load_triplets(self):
         assert self._opt.iter_size > self._opt.batch_size, \

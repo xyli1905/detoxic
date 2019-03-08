@@ -32,6 +32,7 @@ class BaseOption:
         self._parser.add_argument('--test_data_name', type=str, default='test_mat.pkl', help='name for test data')
         self._parser.add_argument('--vocab_name', type=str, default='vocab.pkl', help='file name for processed vocabulary')
         self._parser.add_argument('--pretrained_weight_name', type=str, default='glove.pkl', help='file name for processed pretrained weight')
+        self._parser.add_argument('--number_workers', type=int, default=8, help='number of workers in DataLoader')
 
         # general options for training  (same for E and C)
         self._parser.add_argument('--is_train', type=self.boolean_string, default=True, help='flag showing if the model is in training')
