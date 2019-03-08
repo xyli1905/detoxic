@@ -22,8 +22,8 @@ class Train:
         # prepare training dataset
         self._dataset = load_training_data(self._opt)
         if self._opt.valid_num > 0:
-            # self._dataset = self._dataset[:-self._opt.valid_num, :]
-            self._dataset = self._dataset[:self._opt.valid_num, :] #for debug only
+            self._dataset = self._dataset[:-self._opt.valid_num, :]
+            # self._dataset = self._dataset[:self._opt.valid_num, :] #for debug only
         self._training_size = self._dataset.shape[0]
 
         # Initialize data loader
