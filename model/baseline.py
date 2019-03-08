@@ -35,7 +35,7 @@ class BaselineModel(BaseModel):
             # update accumulated loss
             x = float(self._opt.batch_size)
             self._eta = self._eta / (1. + x*self._eta)
-            self._accum_loss = (1. - x*self._eta) * self._accum_loss + self._eta * Loss
+            self._accum_loss = (1. - x*self._eta) * self._accum_loss + self._eta * Loss.detach()
 
             # display and debug
             if print_flag:
