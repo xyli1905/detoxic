@@ -14,13 +14,13 @@ class Test:
 
         # prepare dataset
         self._dataset = load_training_data(self._opt)
-        # self._dataset = self._dataset[-self._opt.valid_num:, :]
+        self._dataset = self._dataset[-self._opt.valid_num:, :]
         # self._dataset = self._dataset[:self._opt.valid_num, :] #for debug only
-        self._dataset = self._dataset[self._opt.valid_num:2*self._opt.valid_num, :]#for debug only
+        # self._dataset = self._dataset[self._opt.valid_num:2*self._opt.valid_num, :]#for debug only
 
         # specify model, may load trained parameters within
         if self._opt.is_triplet:
-            self._model = TripletModel(self._opt)
+            self._model = TripletModel(self._opt) #not add eval() yet
             print("\nEvaluating model for: \n%s\n%s" % (str(self._model._encoder), str(self._model._classifier)))
         else:
             self._model = BaselineModel(self._opt)
@@ -31,6 +31,7 @@ class Test:
         self._test()
 
     def _test(self):
+        self._model.eval()
         self._model.evaluate(self._dataset)
 
 

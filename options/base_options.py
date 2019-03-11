@@ -67,6 +67,9 @@ class BaseOption:
         self._parser.add_argument('--loss_check_freq', type=int, default=-1, help='frequency (/iters) for outputing loss')
         self._parser.add_argument('--max_loss_check', type=int, default=10, help='upper bound for number of loss check')
 
+        # options for test
+        self._parser.add_argument('--threshold', type=float, default=0.5, help='threshold for classification')
+
         self._initialized = True
 
     def boolean_string(self, s):

@@ -52,6 +52,8 @@ class BaselineModel(BaseModel):
         else:
             raise ValueError('model.update_parameters is for training only')
 
+    def eval(self):
+        self._classifier.eval()
 
     def _create_model(self):
         self._set_network()
@@ -80,4 +82,5 @@ class BaselineModel(BaseModel):
     def load(self, epoch_idx):
         name = "{}_{}".format(self._classifier.name, self._opt.tag)
         self._load_network(self._classifier, name, epoch_idx)
-        self._load_optimizer(self._optimizer, name, epoch_idx)
+        if self._is_train:
+            self._load_optimizer(self._optimizer, name, epoch_idx)

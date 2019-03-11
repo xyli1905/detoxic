@@ -43,9 +43,12 @@ class BaseModel:
         # 0: sincere; 1: toxic
         presently threshold = 0.5
         '''
-        y = F.softmax(self.forward(idx_seq), dim=1)
-        y_pred = torch.argmax(y, dim=1)
-        return y_pred
+        with torch.no_grad():
+            y = F.softmax(self.forward(idx_seq), dim=1)
+            y_pred = y[:,1] >= self._opt.threshold
+            # y_pred = torch.argmax(y, dim=1)
+
+        return y_pred.long()
 
     def evaluate(self, test_data):
         '''
@@ -113,7 +116,8 @@ class BaseModel:
         
 
     def _save_metric(self, fTP,fFP,fTN,fFN,f1score,recall,precision,fallout,accuracy):
-        Dict = {"TP": fTP,
+        Dict = {"threshold": self._opt.threshold,
+                "TP": fTP,
                 "FP": fFP,
                 "TN": fTN,
                 "FN": fFN,
