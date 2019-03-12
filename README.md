@@ -8,19 +8,27 @@ Related topics: *NLP, classification, Deep Learning, content & style, PyTorch, G
 * Word2Vec
 * basic RNN, LSTM, GRU
 
-### coding objectives
-* data preprocessing
-	* input size(length)
-	* augmentation?
-* build baseline models
-	* LSTM + dense
-	* GRU + dense
-	* try different embeddings
-	* test their performance & get some intuition
-* next step
-	* encoder-decoder?
-	* translation?
-	* 2D Conv?
+# tested models
+* baseline
+	* ~~R1D1d0-L1~~
+	* ~~R1D1d0_2-L1~~
+	* ~~R1D2d0-L1~~
+	* ~~R2D1d0-L1~~
+	* ~~R2D2d0-L1~~
+	* EmbLR
+	* BoW
+* balanced
+	* ~~R1D2d0_2-L1~~
 
-### timeline
-* about 1 week (from 2019-01-28 to 2019-02-03)
+
+# test for threshold:
+* baseline
+    * R1D1d0-L1: epoch 9, epoch 15
+    * R1D1d0_2-L1: epoch 15
+    * R1D2d0-L1: epoch 11
+    * R2D1d0-L1: epoch 11
+    * R2D2d0-L1: epoch 14
+    * EmbLR: epoch 12
+    * BoW: 
+* balanced
+    * R1D2d0_2-L1
