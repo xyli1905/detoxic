@@ -14,6 +14,7 @@ class BaseOption:
         self._parser.add_argument('--results_dir', type=str, default='./results', help='directory to store outputs of evaluation of a model')
 
         # options for debug
+        # - note that when used for test mode, it means to dump the index of wrong predict for further investigation
         self._parser.add_argument('--is_debug', type=self.boolean_string, default=False, help='flag for debug')
         self._parser.add_argument('--debug_dir', type=str, default='./debug', help='name dir that stores debug outputs')
 
@@ -81,7 +82,7 @@ class BaseOption:
         if not self._initialized:
             self.initialize()
 
-        # self._opt = self._parser.parse_args(args=[]) # for jupyter input
+        # self._opt = self._parser.parse_args(args=[]) # for use in jupyter
         self._opt = self._parser.parse_args()
 
         # save args to file
