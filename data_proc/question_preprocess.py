@@ -81,9 +81,9 @@ class QuestionPreprocessor:
             print(" In training data:\n num of Label 0: %s \n num of Label 1: %s \n Toxic percentage: %s %s" \
                   % (dist_dic[0], dist_dic[1], dist_dic[1]/(dist_dic[0] + dist_dic[1])*100., "%"))
 
-            return data_seq, data_label
+            return data, data_seq, data_label
 
-        return data_seq, np.array([],dtype=np.int64)
+        return data, data_seq, np.array([],dtype=np.int64)
 
     def load_data_pkl(self, file_name):
         '''
