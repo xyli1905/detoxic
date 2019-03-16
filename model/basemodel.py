@@ -80,9 +80,11 @@ class BaseModel:
 
             # if debug, gradually record the fail case indices
             if self._opt.is_debug:
-                # print((batch_diff==FP_mark).nonzero().numpy())
-                FP_idx = np.vstack((FP_idx, (batch_diff==FP_mark).nonzero().numpy()))
-                FN_idx = np.vstack((FN_idx, (batch_diff==FN_mark).nonzero().numpy()))
+                # print((batch_diff==FP_mark).nonzero().numpy() + i_batch*1000)
+                tmp_FP = (batch_diff==FP_mark).nonzero().numpy() + i_batch*1000
+                tmp_FN = (batch_diff==FN_mark).nonzero().numpy() + i_batch*1000
+                FP_idx = np.vstack((FP_idx, tmp_FP))
+                FN_idx = np.vstack((FN_idx, tmp_FN))
 
             predP += torch.sum(batch_pred)
             FP += torch.sum(batch_diff_pos)
