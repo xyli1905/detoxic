@@ -7,6 +7,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
+import numpy as np
 import os
 import pickle
 import pandas as pd
@@ -59,6 +60,14 @@ class BaseModel:
                                 batch_size=1000,
                                 shuffle=False,
                                 drop_last=False)
+
+        # if debug initialize np arraies to recored wrong pred
+        if self._opt.is_debug:
+            FP_mark = 1
+            FN_mark = -1
+            FP_idx = np.empty((0,1), np.int)
+            FN_idx = np.empty((0,1), np.int)
+
         predP   = 0.
         FP = 0.
         FN = 0.
@@ -69,9 +78,19 @@ class BaseModel:
             batch_diff_pos = batch_diff[batch_diff ==  1]
             batch_diff_neg = batch_diff[batch_diff == -1]
 
+            # if debug, gradually record the fail case indices
+            if self._opt.is_debug:
+                # print((batch_diff==FP_mark).nonzero().numpy())
+                FP_idx = np.vstack((FP_idx, (batch_diff==FP_mark).nonzero().numpy()))
+                FN_idx = np.vstack((FN_idx, (batch_diff==FN_mark).nonzero().numpy()))
+
             predP += torch.sum(batch_pred)
             FP += torch.sum(batch_diff_pos)
             FN -= torch.sum(batch_diff_neg)
+
+        # if debug, dump the wrong pred idx for analyze
+        if self._opt.is_debug:
+            self._dump_falsepred_idx(FP_idx, FN_idx)
 
         TP = predP - FP
         TN = total_num - predP - FN
@@ -114,7 +133,6 @@ class BaseModel:
         # save to csv file for easy use in the future
         self._save_metric(fTP,fFP,fTN,fFN,f1score,recall,precision,fallout,accuracy)
         
-
     def _save_metric(self, fTP,fFP,fTN,fFN,f1score,recall,precision,fallout,accuracy):
         Dict = {"threshold": self._opt.threshold,
                 "TP": fTP,
@@ -140,6 +158,17 @@ class BaseModel:
         df.to_csv(fpath)
 
         print("metric for epoch %d saved/add to %s\n" % (self.model_epoch, fpath))
+
+    def _dump_falsepred_idx(self, FP_idx, FN_idx):
+        F_dict = {"FP": FP_idx,
+                  "FN": FN_idx
+                 }
+
+        fname = "falsepredidx.pkl"
+        fpath = os.path.join(self._opt.debug_dir, fname)
+
+        with open(fpath, 'wb') as f:
+            pickle.dump(F_dict, f)
 
 
     def save(self, epoch_idx):
