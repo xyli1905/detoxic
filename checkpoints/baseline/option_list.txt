@@ -1,20 +1,38 @@
 ------------ Options -------------
 batch_size: 64
 chkp_dir: ./checkpoints
+classifier_net: LSTM
 data_dir: ./data_proc/processed_data
-is_train: False
+debug_dir: ./debug
+dropout_rate: 0
+encoder_net: 
+is_balanced: False
+is_bidirectional: False
+is_debug: True
+is_emb_trainable: False
+is_train: True
+is_triplet: False
 iter_size: 100000
-load_epoch_idx: 5
-lr: 0.04
-margin: 0.04
-max_epoch: 6
+load_epoch_C: 9
+load_epoch_E: 0
+loss_check_freq: -1
+lr_C: 0.0001
+lr_E: 0.04
+margin: 0.01
+max_epoch_C: 1
+max_epoch_E: 6
+max_loss_check: 10
 model_type: baseline
-network_name: EmbLR
-pretrained_weight_name: pretrained_weight.pkl
+number_layers: 1
+number_workers: 0
+pretrained_weight_name: glove.pkl
+results_dir: ./results
+round_num: 1
 save_freq: 1
+tag: R1D1d0-L1
+test_data_name: test_mat.pkl
+threshold: 0.5
 train_data_name: train_mat.pkl
-trainable_emb: False
-triplet: False
 valid_num: 100000
 vocab_name: vocab.pkl
 -------------- End ----------------
